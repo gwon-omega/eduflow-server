@@ -7,12 +7,14 @@ const environmentSchema = z.object({
   DIRECT_URL: z.string().optional(),
   JWT_SECRET: z.string().min(32).default("your-jwt-secret-key-here-minimum-32-characters"),
   JWT_REFRESH_SECRET: z.string().min(32).default("your-refresh-secret-key-here-minimum-32-characters"),
-  BASE_URL: z.string().optional().default("http://localhost:3000"),
+  BASE_URL: z.string().optional().default("http://localhost:3002"),
   FRONTEND_URL: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_STORAGE_BUCKET: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

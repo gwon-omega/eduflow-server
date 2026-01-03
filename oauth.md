@@ -1,50 +1,65 @@
-async function main() {
-  const server = http.createServer(async function (req, res) {
+# 🔐 Modern OAuth 2.0 Implementation (2026 Standards)
 
-  if (req.url.startsWith('/oauth2callback')) {
-    let q = url.parse(req.url, true).query;
+This guide replaces the deprecated `gapi` (Google API Client Library for JavaScript) with the modern **Google Identity Services (GIS)** and secure backend verification.
 
-    if (q.error) {
-      console.log('Error:' + q.error);
-    } else {
+## 1. Frontend Integration (Google Identity Services)
 
-      // Get access and refresh tokens (if access_type is offline)
-      let { tokens } = await oauth2Client.getToken(q.code);
-      oauth2Client.setCredentials(tokens);
+Avoid using the old `gapi.auth2`. Instead, use the HTML API or the JS API for "Sign In with Google".
 
-      // Example of using Google Drive API to list filenames in user's Drive.
-      const drive = google.drive('v3');
-      drive.files.list({
-        auth: oauth2Client,
-        pageSize: 10,
-        fields: 'nextPageToken, files(id, name)',
-      }, (err1, res1) => {
-        // TODO(developer): Handle response / error.
-      });
-    }
-  }
-}
+### Step A: Load the Library
+```html
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+```
 
-
-
-
-
-// initTokenClient() initializes a new token client with your
-// web app's client ID and the scope you need access to
-
-const client = google.accounts.oauth2.initTokenClient({
-  client_id: 'YOUR_GOOGLE_CLIENT_ID',
-  scope: 'https://www.googleapis.com/auth/calendar.readonly',
-
-  // callback function to handle the token response
-  callback: (tokenResponse) => {
-    if (tokenResponse && tokenResponse.access_token) {
-      gapi.client.setApiKey('YOUR_API_KEY');
-      gapi.client.load('calendar', 'v3', listUpcomingEvents);
-    }
-  },
+### Step B: Initialize & Render Button (JS API)
+```javascript
+google.accounts.id.initialize({
+  client_id: "YOUR_GOOGLE_CLIENT_ID",
+  callback: handleCredentialResponse, // Sends token to backend
+  context: "signin",
 });
 
-function listUpcomingEvents() {
-  gapi.client.calendar.events.list(...);
+google.accounts.id.renderButton(
+  document.getElementById("googleBtn"),
+  { theme: "outline", size: "large" }
+);
+```
+
+### Step C: Handle Response
+```javascript
+function handleCredentialResponse(response) {
+  // response.credential is the ID Token (JWT)
+  fetch("https://api.eduflow.com/api/v1/auth/google-login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential: response.credential }),
+  });
 }
+```
+
+## 2. Backend Verification (Node.js)
+
+Verify the token using `google-auth-library` or `googleapis`. **Never trust a token sent from the client without verification.**
+
+```typescript
+import { google } from "googleapis";
+
+const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
+
+async function verifyToken(idToken: string) {
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: CLIENT_ID,
+  });
+  return ticket.getPayload(); // Contains email, name, picture
+}
+```
+
+## 3. Deprecated Patterns (DO NOT USE)
+- ❌ `gapi.auth2.getAuthInstance()` -> **REPLACED BY GIS**
+- ❌ `gapi.client.setApiKey()` for Auth -> **USE OAUTH2 TOKENS**
+- ❌ `initTokenClient` for simple Sign-In -> **USE `accounts.id.initialize`**
+  - *Note: `initTokenClient` is still used for AUTHORIZATION (accessing specific APIs like Calendar/Drive), but not for AUTHENTICATION (Sign-In).*
+
+> [!IMPORTANT]
+> Always use `httpOnly` secure cookies to store the session token returned by the server after OAuth verification.

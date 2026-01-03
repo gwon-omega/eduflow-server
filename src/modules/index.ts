@@ -17,6 +17,7 @@ import instituteRoutes from "./institute/routes/index";
 import academicRoutes from "./academic/routes/index";
 import billingRoutes from "./billing/routes/index";
 import progressRoutes from "./progress/routes/index";
+import attendanceRoutes from "./attendance/routes/index";
 
 const router: Router = express.Router();
 
@@ -36,5 +37,6 @@ router.use("/institute", instituteRoutes);
 router.use("/academic", academicRoutes);
 router.use("/billing", billingRoutes);
 router.use("/progress", progressRoutes);
+router.use("/attendance", attendanceRoutes);
 
 export default router;

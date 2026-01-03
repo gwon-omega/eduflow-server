@@ -11,4 +11,5 @@ export interface IExtendedRequest extends Request {
     subdomain: string;
     sanitizedId: string;
   };
+  instituteId?: string;
 }

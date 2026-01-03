@@ -6,6 +6,13 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const result = await authService.login(email, password);
 
+    res.cookie("eduflow_auth_token", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

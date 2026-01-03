@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import * as Sentry from "@sentry/node";
 import cookieParser from "cookie-parser";
+import envConfigService from "@core/services/envConfigService";
 
 // Core Infrastructure
 import { tenantMiddleware } from "@core/middleware/tenantMiddleware";
@@ -17,6 +18,9 @@ import { sanitizeBody, sanitizeQuery } from "@core/services/validationService";
 // Modular Routes
 import modularRouter from "@modules/index";
 import healthRoute from "@core/routes/health.route";
+
+// Validate Environment
+envConfigService.validateEnvOrExit();
 
 const app = express();
 
