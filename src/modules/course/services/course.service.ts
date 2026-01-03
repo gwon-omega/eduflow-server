@@ -1,6 +1,7 @@
 import courseRepo from "../repository/course.repo";
 import { Course } from "@generated/prisma";
 import firebaseStorage from "../../../core/services/firebaseStorage";
+import { Express } from "express";
 
 export class CourseService {
   async getAllCourses(instituteId: string) {

@@ -12,4 +12,5 @@ export interface IExtendedRequest extends Request {
     sanitizedId: string;
   };
   instituteId?: string;
+  file?: Express.Multer.File;
 }
