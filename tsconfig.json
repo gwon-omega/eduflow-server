@@ -15,8 +15,7 @@
       "@core/*": ["src/core/*"],
       "@modules/*": ["src/modules/*"],
       "@services/*": ["src/core/services/*"],
-      "@types/*": ["src/core/types/*"],
-      "@generated/*": ["src/generated/*"]
+      "@types/*": ["src/core/types/*"]
     },
     "typeRoots": [
       "./node_modules/@types"

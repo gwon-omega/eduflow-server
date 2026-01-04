@@ -74,7 +74,6 @@
     "@core": "dist/core",
     "@modules": "dist/modules",
     "@services": "dist/core/services",
-    "@types": "dist/core/types",
-    "@generated": "dist/generated"
+    "@types": "dist/core/types"
   }
 }
