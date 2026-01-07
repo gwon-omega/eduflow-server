@@ -30,7 +30,14 @@ const app = express();
 app.use(helmetConfig);
 app.use(additionalSecurityHeaders);
 app.use(cookieParser());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({
+  limit: "10mb",
+  verify: (req: any, _res, buf) => {
+    if (req.originalUrl?.includes("/webhook")) {
+      req.rawBody = buf;
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Sanitization

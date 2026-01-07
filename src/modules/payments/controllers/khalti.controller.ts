@@ -37,7 +37,8 @@ export const verifyKhaltiPayment = async (req: Request, res: Response) => {
 
     if (!pidx) return res.status(400).json({ status: "error", message: "PIDX required" });
 
-    const verification = await khaltiService.verifyPayment(pidx);
+    const instituteId = (req as any).instituteId;
+    const verification = await khaltiService.verifyPayment(pidx, instituteId);
 
     if (verification.status === "Completed") {
       // Logic to update database status = 'paid'

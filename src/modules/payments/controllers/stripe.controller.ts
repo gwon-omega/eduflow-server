@@ -30,8 +30,8 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
   try {
     if (!sig) throw new Error("No signature");
 
-    // Use rawBody if available (needs raw body parser middleware for this route)
-    const event = await stripeService.constructEvent(req.body, sig as string);
+    // Use rawBody if available (requires the raw body parser middleware from app.ts)
+    const event = await stripeService.constructEvent((req as any).rawBody || req.body, sig as string);
 
     // Handle event
     if (event.type === "payment_intent.succeeded") {
