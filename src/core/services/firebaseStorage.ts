@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import { v4 as uuidv4 } from "uuid";
 // @ts-ignore
 import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
+import * as streamifier from "streamifier";
 
 let bucket: any = null;
 let firebaseEnabled = false;

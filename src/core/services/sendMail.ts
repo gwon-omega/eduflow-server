@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import * as nodemailer from "nodemailer";
 
 const sendMail = async (data: { to: string; subject: string; text?: string; html?: string }) => {
   try {
