@@ -1,15 +1,21 @@
 import prisma from "../../../core/database/prisma";
+import { encryptObject, decryptObject } from "../../../core/utils/encryption";
 
 export class PaymentSettingsService {
 
   async savePaymentConfig(instituteId: string, provider: string, credentials: any, userRole: string) {
     // 1. Validate Provider
-    const validProviders = ["khalti", "esewa", "stripe"];
+    const validProviders = ["khalti", "esewa", "stripe", "global_ime"];
     if (!validProviders.includes(provider)) {
       throw new Error("Invalid payment provider");
     }
 
-    // 2. Local Payment Constraint (Khalti XOR eSewa)
+    // 2. Global IME Restriction (Super Admin Only)
+    if (provider === "global_ime" && userRole !== "super_admin" && userRole !== "super-admin") {
+      throw new Error("Global IME integration is only available for Super Admins");
+    }
+
+    // 3. Local Payment Constraint (Khalti XOR eSewa)
     // Only applies to non-Super Admin (Institutes)
     if (userRole !== "SUPER_ADMIN") {
       if (provider === "khalti" || provider === "esewa") {
@@ -30,9 +36,10 @@ export class PaymentSettingsService {
       }
     }
 
-    // 3. Save/Update Configuration
-    // We store credentials in 'metadata' (encrypted conceptually, but here plain JSON for now or assumed secure env)
-    // For a real prod app, these should be encrypted before storage.
+    // 4. Encrypt Metadata
+    const encryptedMetadata = encryptObject(credentials);
+
+    // 5. Save/Update Configuration
     const integration = await prisma.instituteIntegration.upsert({
       where: {
         instituteId_provider: {
@@ -41,15 +48,15 @@ export class PaymentSettingsService {
         },
       },
       update: {
-        metadata: credentials,
+        metadata: encryptedMetadata as any,
         isActive: true,
       },
       create: {
         instituteId,
         provider,
-        metadata: credentials,
+        metadata: encryptedMetadata as any,
         isActive: true,
-        accessToken: "", // Not used for Key-based auth
+        accessToken: "",
         refreshToken: "",
       },
     });
@@ -58,18 +65,49 @@ export class PaymentSettingsService {
   }
 
   async getPaymentConfigs(instituteId: string) {
-    return await prisma.instituteIntegration.findMany({
+    const integrations = await prisma.instituteIntegration.findMany({
       where: {
         instituteId,
-        provider: { in: ["khalti", "esewa", "stripe"] },
+        provider: { in: ["khalti", "esewa", "stripe", "global_ime"] },
       },
       select: {
         provider: true,
         isActive: true,
-        // Do not return full metadata (secrets) to frontend
+        metadata: true,
         createdAt: true,
       }
     });
+
+    // Handle decryption or return sanitized data
+    return integrations.map(item => {
+        let meta = null;
+        if (item.metadata && typeof item.metadata === "string") {
+            meta = decryptObject(item.metadata);
+        } else {
+            meta = item.metadata; // Fallback for existing plain JSON
+        }
+
+        return {
+            provider: item.provider,
+            isActive: item.isActive,
+            createdAt: item.createdAt,
+            // Return only public keys if necessary, or nothing for security
+            hasKeys: !!meta
+        };
+    });
+  }
+
+  async getDecryptedMetadata(instituteId: string, provider: string) {
+    const integration = await prisma.instituteIntegration.findUnique({
+        where: { instituteId_provider: { instituteId, provider } }
+    });
+
+    if (!integration || !integration.metadata) return null;
+
+    if (typeof integration.metadata === "string") {
+        return decryptObject(integration.metadata);
+    }
+    return integration.metadata;
   }
 }
 

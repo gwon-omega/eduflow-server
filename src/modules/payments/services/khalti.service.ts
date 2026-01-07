@@ -1,5 +1,5 @@
 import axios from "axios";
-import prisma from "../../../core/database/prisma";
+import paymentSettingsService from "./paymentSettings.service";
 
 class KhaltiService {
   private initiateUrl: string;
@@ -11,12 +11,10 @@ class KhaltiService {
   private async getCredentials(instituteId?: string) {
     if (!instituteId) return process.env.KHALTI_SECRET_KEY || "";
 
-    const integration = await prisma.instituteIntegration.findUnique({
-      where: { instituteId_provider: { instituteId, provider: "khalti" } },
-    });
+    const meta = await paymentSettingsService.getDecryptedMetadata(instituteId, "khalti");
 
-    if (integration && integration.isActive && integration.metadata) {
-       return (integration.metadata as any).secretKey || process.env.KHALTI_SECRET_KEY || "";
+    if (meta && meta.secretKey) {
+       return meta.secretKey;
     }
     return process.env.KHALTI_SECRET_KEY || "";
   }

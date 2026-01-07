@@ -9,7 +9,7 @@ const router = Router();
 
 // Stripe
 router.post("/stripe/create-intent", authenticate, createPaymentIntent);
-router.post("/stripe/webhook", handleStripeWebhook); // Webhook requires raw body usually
+router.post("/stripe/webhook/:instituteId", handleStripeWebhook); // Unique per-institute webhook
 
 // Khalti
 router.post("/khalti/initiate", authenticate, initiateKhaltiPayment);
@@ -17,7 +17,12 @@ router.post("/khalti/verify", authenticate, verifyKhaltiPayment);
 
 // eSewa
 router.post("/esewa/initiate", authenticate, initiateEsewaPayment);
-router.get("/esewa/success", handleEsewaSuccess); // Public callback
+router.get("/esewa/success", handleEsewaSuccess);
+
+// Global IME
+import { initiateGlobalImePayment, handleGlobalImeCallback } from "../controllers/globalIme.controller";
+router.post("/global-ime/initiate", authenticate, initiateGlobalImePayment);
+router.post("/global-ime/callback", handleGlobalImeCallback);
 
 // Configuration
 router.post("/settings", authenticate, savePaymentConfig);

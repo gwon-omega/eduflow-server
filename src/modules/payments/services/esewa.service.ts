@@ -1,6 +1,5 @@
-
 import crypto from "crypto";
-import prisma from "../../../core/database/prisma";
+import paymentSettingsService from "./paymentSettings.service";
 
 class EsewaService {
   private gatewayUrl: string;
@@ -20,14 +19,11 @@ class EsewaService {
       };
     }
 
-    const integration = await prisma.instituteIntegration.findUnique({
-      where: { instituteId_provider: { instituteId, provider: "esewa" } },
-    });
+    const meta = await paymentSettingsService.getDecryptedMetadata(instituteId, "esewa");
 
-    if (integration && integration.isActive && integration.metadata) {
-      const meta = integration.metadata as any;
+    if (meta) {
       return {
-        merchantId: meta.merchantCode || meta.merchantId || process.env.ESEWA_MERCHANT_ID || "EPAYTEST", // handle variations
+        merchantId: meta.merchantCode || meta.merchantId || process.env.ESEWA_MERCHANT_ID || "EPAYTEST",
         secretKey: meta.secretKey || process.env.ESEWA_SECRET_KEY || "8gBm/:&EnhH.1/q",
       };
     }
