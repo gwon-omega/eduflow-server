@@ -46,9 +46,12 @@ export class OAuthService {
    * Exchanges a Google Authorization Code for Tokens (Access + ID Token).
    * This is the secure "Authorization Code Flow".
    */
-  async verifyGoogleCode(code: string) {
+  async verifyGoogleCode(code: string, redirectUri?: string) {
     try {
-      const { tokens } = await this.client.getToken(code);
+      const { tokens } = await this.client.getToken({
+        code,
+        redirect_uri: redirectUri,
+      });
       const ticket = await this.client.verifyIdToken({
         idToken: tokens.id_token!,
         audience: process.env.GOOGLE_CLIENT_ID,

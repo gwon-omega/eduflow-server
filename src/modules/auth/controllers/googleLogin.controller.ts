@@ -11,7 +11,8 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     if (code) {
       // Authorization Code Flow (Secure)
-      googleUser = await oauthService.verifyGoogleCode(code);
+      const { redirect_uri } = req.body;
+      googleUser = await oauthService.verifyGoogleCode(code, redirect_uri);
     } else if (credential) {
       // Legacy/Implicit Flow (ID Token)
       googleUser = await oauthService.verifyGoogleToken(credential);
