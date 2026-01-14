@@ -15,6 +15,10 @@ export class AnalyticsService {
   async getAssessmentPerformance(courseId: string) {
     return analyticsRepo.getAssessmentPerformance(courseId);
   }
+
+  async getPlatformStats() {
+    return analyticsRepo.getPlatformStats();
+  }
 }
 
 export default new AnalyticsService();

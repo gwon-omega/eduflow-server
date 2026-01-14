@@ -30,6 +30,59 @@ export class TeacherRepo extends BaseRepository<Teacher> {
       },
     });
   }
+
+  async getAssignedCourses(teacherId: string) {
+    return prisma.teacherCourse.findMany({
+      where: { teacherId },
+      include: {
+        course: {
+          include: {
+            _count: {
+              select: {
+                students: true,
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async getTeacherStats(teacherId: string) {
+    const activeCourses = await prisma.teacherCourse.count({
+      where: { teacherId }
+    });
+
+    const teacherCourses = await prisma.teacherCourse.findMany({
+      where: { teacherId },
+      select: { courseId: true }
+    });
+
+    const courseIds = teacherCourses.map(tc => tc.courseId);
+
+    const totalStudents = await prisma.studentCourse.count({
+      where: {
+        courseId: { in: courseIds }
+      }
+    });
+
+    // Pending assignments for courses this teacher teaches
+    const pendingGrading = await prisma.assignmentSubmission.count({
+      where: {
+        assignment: {
+          courseId: { in: courseIds }
+        },
+        status: "pending"
+      }
+    });
+
+    return {
+      activeCourses,
+      totalStudents,
+      pendingGrading,
+      classesToday: 0 // Placeholder
+    };
+  }
 }
 
 export default new TeacherRepo();

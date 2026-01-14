@@ -6,6 +6,8 @@ import { getStudentById } from "../controllers/getStudentById.controller";
 import { createStudent } from "../controllers/createStudent.controller";
 import { updateProfile } from "../controllers/updateProfile.controller";
 import { deleteStudent } from "../controllers/deleteStudent.controller";
+import { getEnrolledCourses } from "../controllers/getEnrolledCourses.controller";
+import { getStudentStats } from "../controllers/getStudentStats.controller";
 import multer from "multer";
 
 const router = Router();
@@ -15,6 +17,8 @@ router.get("/profile", authenticate, getProfile);
 router.get("/", authenticate, getStudents);
 router.get("/:id", authenticate, getStudentById);
 router.post("/", authenticate, upload.single("studentImage"), createStudent);
+router.get("/courses/enrolled", authenticate, getEnrolledCourses);
+router.get("/stats", authenticate, getStudentStats);
 router.put("/:id", authenticate, upload.single("studentImage"), updateProfile);
 router.delete("/:id", authenticate, deleteStudent);
 

@@ -51,6 +51,41 @@ export class AnalyticsRepo {
       studentsGraded: a._count.results,
     }));
   }
+
+  async getPlatformStats() {
+    const totalInstitutes = await prisma.institute.count();
+    const totalUsers = await prisma.user.count();
+    const totalStudents = await prisma.student.count();
+    const totalTeachers = await prisma.teacher.count();
+
+    // Monthly institute growth (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const instituteGrowth = await prisma.institute.groupBy({
+      by: ['createdAt'],
+      where: {
+        createdAt: { gte: sixMonthsAgo },
+      },
+      _count: true,
+    });
+
+    // Revenue stats (simplified for now)
+    const totalRevenue = await prisma.feePayment.aggregate({
+      _sum: {
+        amountPaid: true,
+      }
+    });
+
+    return {
+      totalInstitutes,
+      totalUsers,
+      totalStudents,
+      totalTeachers,
+      totalRevenue: Number(totalRevenue._sum.amountPaid || 0),
+      instituteGrowth
+    };
+  }
 }
 
 export default new AnalyticsRepo();

@@ -28,6 +28,46 @@ export class StudentRepo extends BaseRepository<Student> {
       },
     });
   }
+
+  async getEnrolledCourses(studentId: string) {
+    return prisma.studentCourse.findMany({
+      where: { studentId },
+      include: {
+        course: {
+          include: {
+            teachers: {
+              include: {
+                teacher: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async getStudentStats(studentId: string) {
+    const enrolledCourses = await prisma.studentCourse.count({
+      where: { studentId }
+    });
+
+    // For learning hours, GPA, etc., we'd need more logic/tables.
+    // Simplifying for now with counts.
+    const pendingAssignments = await prisma.assignmentSubmission.count({
+      where: {
+        studentId,
+        status: "pending"
+      }
+    });
+
+    return {
+      enrolledCourses,
+      learningHours: 0, // Placeholder
+      gpa: 0, // Placeholder
+      pendingAssignments,
+      urgentAssignments: 0 // Placeholder
+    };
+  }
 }
 
 export default new StudentRepo();
