@@ -8,17 +8,19 @@
  * Run: npx ts-node prisma/seed.ts
  */
 
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 // Super Admin credentials
 const SUPER_ADMIN = {
-  email: "super-admin@eduflow.com.np",
+  email: "admin@eduflow.jeevanbhatt.com.np",
   password: "MAYAoftheworld123@#$",
   firstName: "Super",
   lastName: "Admin",
+  subdomain: "super-admin",
+  instituteName: "EduFlow Administration",
 };
 
 // Real Nepal Educational Institutions
@@ -433,9 +435,21 @@ async function main() {
       role: "super_admin",
       emailVerified: true,
       accountStatus: "active",
+      ownedInstitutes: {
+        create: {
+          instituteName: SUPER_ADMIN.instituteName,
+          subdomain: SUPER_ADMIN.subdomain,
+          instituteNumber: "ADMIN-001",
+          type: "UNIVERSITY", // High level
+          isActive: true,
+          emailVerified: true,
+          accountStatus: "active",
+        },
+      },
     },
   });
-  console.log(`✅ Super Admin created: ${superAdmin.email}\n`);
+  console.log(`✅ Super Admin created: ${superAdmin.email}`);
+  console.log(`✅ Super Admin Institute created: ${SUPER_ADMIN.subdomain}.eduflow.jeevanbhatt.com.np\n`);
 
   // Create Institute Owner users and Institutes
   console.log("🏫 Creating Nepal Educational Institutions...");
