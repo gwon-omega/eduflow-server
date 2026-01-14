@@ -77,5 +77,8 @@
     "@modules": "dist/modules",
     "@services": "dist/core/services",
     "@types": "dist/core/types"
+  },
+  "prisma": {
+    "seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
   }
 }
