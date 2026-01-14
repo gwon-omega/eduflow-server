@@ -3,6 +3,7 @@ import { createInstitute } from "../controllers/createInstitute.controller";
 import { getMyInstitutes } from "../controllers/getMyInstitutes.controller";
 import { updateSubdomain } from "../controllers/updateSubdomain.controller";
 import { getInstituteBySlug } from "../controllers/getInstituteBySlug.controller";
+import { getAllInstitutes } from "../controllers/getAllInstitutes.controller";
 import {
   getPublicInstitutes,
   requestJoinInstitute,
@@ -18,6 +19,9 @@ const router = Router();
 // Public routes
 router.get("/public", getPublicInstitutes);
 router.get("/slug/:slug", getInstituteBySlug);
+
+// Admin routes (super admin only)
+router.get("/admin/all", authenticate, getAllInstitutes);
 
 // Authenticated routes
 router.post("/", authenticate, registrationLimiter, createInstitute);
