@@ -17,6 +17,18 @@ enum InstituteType {
   TRAINING_CENTER
 }
 
+// Join Request Enums (optimized from string)
+enum JoinRequestRole {
+  student
+  teacher
+}
+
+enum JoinRequestStatus {
+  pending
+  approved
+  rejected
+}
+
 // ============================================
 // STUDENT CART MODEL (for controller compatibility)
 // ============================================
@@ -145,6 +157,7 @@ model User {
   // Join requests
   joinRequests InstituteJoinRequest[]
 
+  @@index([email])
   @@map("users")
 }
 
@@ -211,6 +224,7 @@ model Institute {
   // Join requests
   joinRequests InstituteJoinRequest[]
 
+  @@index([ownerId])
   @@map("institutes")
 }
 
@@ -219,21 +233,22 @@ model Institute {
 // ============================================
 
 model InstituteJoinRequest {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  instituteId String    @map("institute_id") @db.Uuid
-  role        String    // "student" or "teacher"
-  status      String    @default("pending") // pending, approved, rejected
-  message     String?   // Optional message from user
-  reviewedBy  String?   @map("reviewed_by") @db.Uuid
-  reviewedAt  DateTime? @map("reviewed_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id          String             @id @default(uuid()) @db.Uuid
+  userId      String             @map("user_id") @db.Uuid
+  instituteId String             @map("institute_id") @db.Uuid
+  role        JoinRequestRole    @default(student)
+  status      JoinRequestStatus  @default(pending)
+  message     String?            // Optional message from user
+  reviewedBy  String?            @map("reviewed_by") @db.Uuid
+  reviewedAt  DateTime?          @map("reviewed_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
 
   @@unique([userId, instituteId])
+  @@index([userId])
   @@index([instituteId])
   @@index([status])
   @@map("institute_join_requests")
@@ -360,6 +375,7 @@ model Student {
   @@unique([instituteId, email])
   @@index([instituteId])
   @@index([userId])
+  @@index([email])
   @@map("students")
 }
 
@@ -386,6 +402,7 @@ model Teacher {
   @@unique([instituteId, email])
   @@index([instituteId])
   @@index([userId])
+  @@index([email])
   @@map("teachers")
 }
 
@@ -827,6 +844,7 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+  @@index([userId, isRead]) // Composite for unread notifications query
   @@map("notifications")
 }
 

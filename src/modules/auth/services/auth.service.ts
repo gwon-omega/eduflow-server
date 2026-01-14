@@ -147,8 +147,8 @@ export class AuthService {
       }
     }
 
-    // Check if institute subdomain would conflict
-    if (data.schoolName) {
+    // Check if institute subdomain would conflict (only for institute owners)
+    if (data.role === "institute" && data.schoolName) {
       const proposedSubdomain = data.schoolName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
       const existingInstitute = await instituteRepo.findBySubdomainPrefix(proposedSubdomain);
       if (existingInstitute) {
@@ -160,6 +160,10 @@ export class AuthService {
       }
     }
 
+    // Validate role
+    const allowedRoles = ["institute", "student", "teacher"];
+    const userRole = data.role && allowedRoles.includes(data.role) ? data.role : "student";
+
     const hashedPassword = await this.hashPassword(data.password);
 
     // Create User with pending verification status
@@ -168,7 +172,7 @@ export class AuthService {
       password: hashedPassword,
       firstName: data.firstName,
       lastName: data.lastName,
-      role: "institute",
+      role: userRole,
       emailVerified: false,
       accountStatus: "pending_verification",
     });
@@ -176,8 +180,8 @@ export class AuthService {
     // Generate verification token
     const verificationToken = await authRepo.setVerificationToken(user.id);
 
-    // Create Institute if schoolName is provided
-    if (data.schoolName) {
+    // Create Institute ONLY if role is 'institute' and schoolName is provided
+    if (userRole === "institute" && data.schoolName) {
       const subdomain = data.schoolName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
       const instituteNumber = "INST-" + Math.floor(100000 + Math.random() * 900000).toString();
 
