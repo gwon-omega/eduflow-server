@@ -361,9 +361,10 @@ model Course {
 
   institute Institute       @relation(fields: [instituteId], references: [id], onDelete: Cascade)
   category  Category        @relation(fields: [categoryId], references: [id])
-  chapters  Chapter[]
-  students  StudentCourse[]
-  teachers  TeacherCourse[]
+  chapters    Chapter[]
+  assignments Assignment[]
+  students    StudentCourse[]
+  teachers    TeacherCourse[]
 
   @@index([instituteId])
   @@index([categoryId])
@@ -953,6 +954,7 @@ model Assignment {
   deletedAt           DateTime?          @map("deleted_at")
 
   institute   Institute              @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
   submissions AssignmentSubmission[]
 
   @@index([instituteId])
