@@ -83,6 +83,94 @@ export class TeacherRepo extends BaseRepository<Teacher> {
       classesToday: 0 // Placeholder
     };
   }
+
+  async getStudents(teacherId: string) {
+    // Get all courses taught by this teacher
+    const teacherCourses = await prisma.teacherCourse.findMany({
+      where: { teacherId },
+      include: {
+        course: {
+          select: {
+            id: true,
+            students: {
+              include: {
+                student: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true,
+                        profileImage: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Flatten and unique students
+    const studentMap = new Map();
+    teacherCourses.forEach(tc => {
+      tc.course.students.forEach(sc => {
+        if (!studentMap.has(sc.studentId)) {
+          studentMap.set(sc.studentId, {
+            ...sc.student,
+            courses: 1
+          });
+        } else {
+          const s = studentMap.get(sc.studentId);
+          s.courses++;
+        }
+      });
+    });
+
+    return Array.from(studentMap.values());
+  }
+
+  async getSchedule(teacherId: string) {
+    // Get schedule events for this teacher or their courses
+    const teacherCourses = await prisma.teacherCourse.findMany({
+      where: { teacherId },
+      select: { courseId: true }
+    });
+    const courseIds = teacherCourses.map(tc => tc.courseId);
+
+    return prisma.scheduleEvent.findMany({
+      where: {
+        OR: [
+          { teacherId },
+          { courseId: { in: courseIds } }
+        ]
+      },
+      orderBy: { startTime: 'asc' }
+    });
+  }
+
+  async getAssignments(teacherId: string) {
+    const teacherCourses = await prisma.teacherCourse.findMany({
+      where: { teacherId },
+      select: { courseId: true }
+    });
+    const courseIds = teacherCourses.map(tc => tc.courseId);
+
+    return prisma.assignment.findMany({
+      where: {
+        courseId: { in: courseIds }
+      },
+      include: {
+        _count: {
+          select: { submissions: true }
+        },
+        course: {
+          select: { name: true }
+        }
+      },
+      orderBy: { dueDate: 'asc' }
+    });
+  }
 }
 
 export default new TeacherRepo();

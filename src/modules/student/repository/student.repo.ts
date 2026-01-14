@@ -68,6 +68,48 @@ export class StudentRepo extends BaseRepository<Student> {
       urgentAssignments: 0 // Placeholder
     };
   }
+
+  async getAssignments(studentId: string) {
+    // Get courses first
+    const studentCourses = await prisma.studentCourse.findMany({
+      where: { studentId },
+      select: { courseId: true }
+    });
+    const courseIds = studentCourses.map(sc => sc.courseId);
+
+    return prisma.assignment.findMany({
+      where: {
+        courseId: { in: courseIds }
+      },
+      include: {
+        course: {
+          select: { name: true }
+        },
+        submissions: {
+          where: { studentId }
+        }
+      },
+      orderBy: { dueDate: 'asc' }
+    });
+  }
+
+  async getResults(studentId: string) {
+    return prisma.assessmentResult.findMany({
+      where: { studentId },
+      include: {
+        assessment: {
+          select: {
+            title: true,
+            maxMarks: true,
+            course: {
+              select: { name: true }
+            }
+          }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+  }
 }
 
 export default new StudentRepo();
