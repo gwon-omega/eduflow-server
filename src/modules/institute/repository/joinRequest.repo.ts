@@ -54,7 +54,7 @@ export class JoinRequestRepo {
     return this.model.findMany({
       where: {
         instituteId,
-        ...(status && { status }),
+        ...(status && { status: status as JoinRequestStatus }),
       },
       include: {
         user: {
