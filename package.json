@@ -14,7 +14,9 @@
     "prisma:pull": "prisma db pull",
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset",
-    "prisma:seed": "prisma db seed",
+    "prisma:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
+    "prisma:seed:admin": "ts-node -r tsconfig-paths/register prisma/seed-admin.ts",
+    "prisma:seed:institutes": "ts-node -r tsconfig-paths/register prisma/seed-institutes.ts",
     "postinstall": "prisma generate",
     "render:build": "npm install --legacy-peer-deps && prisma generate && prisma migrate deploy && npm run build"
   },
