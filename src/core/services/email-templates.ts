@@ -118,7 +118,33 @@ export const verificationEmail = (firstName: string, token: string) => {
 };
 
 /**
- * 2. Password Reset
+ * 2. Resend Verification Email
+ */
+export const resendVerificationEmail = (firstName: string, token: string) => {
+  const verifyUrl = `${BASE_URL}/verify-email?token=${token}`;
+
+  const content = `
+    <h2 style="margin: 0 0 20px 0; font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.025em;">
+      Verify your email address 📧
+    </h2>
+    <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.7; color: #475569;">
+      Hi ${firstName}, you requested a new verification link. Click the button below to verify your email address and continue your journey with <strong>${BRAND_NAME}</strong>.
+    </p>
+    ${emailButton('Verify My Account', verifyUrl)}
+    <div style="margin-top: 32px; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+      <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase;">Direct Link</p>
+      <p style="margin: 0; font-size: 13px; color: ${BRAND_COLOR}; word-break: break-all; opacity: 0.8;">${verifyUrl}</p>
+    </div>
+  `;
+
+  return {
+    subject: `New verification link for your ${BRAND_NAME} account`,
+    html: emailLayout(content),
+  };
+};
+
+/**
+ * 3. Password Reset
  */
 export const passwordResetEmail = (firstName: string, token: string) => {
   const resetUrl = `${BASE_URL}/reset-password?token=${token}`;
@@ -231,6 +257,7 @@ export const emailVerifiedSuccessEmail = (firstName: string) => {
 
 export default {
   verificationEmail,
+  resendVerificationEmail,
   emailVerifiedSuccessEmail,
   passwordResetEmail,
   securityAlertEmail,
