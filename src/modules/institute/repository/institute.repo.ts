@@ -33,6 +33,15 @@ export class InstituteRepo extends BaseRepository<Institute> {
   }
 
   /**
+   * Find institute by exact subdomain
+   */
+  async findBySubdomain(subdomain: string): Promise<Institute | null> {
+    return this.model.findUnique({
+      where: { subdomain },
+    });
+  }
+
+  /**
    * Search institutes by name or subdomain (case-insensitive)
    */
   async search(query: string, limit: number = 20) {
