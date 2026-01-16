@@ -42,28 +42,38 @@ export class InstituteRepo extends BaseRepository<Institute> {
   }
 
   /**
-   * Search institutes by name or subdomain (case-insensitive)
+   * Search institutes by name, subdomain, or address (case-insensitive)
    */
-  async search(query: string, limit: number = 20) {
-    return this.model.findMany({
-      where: {
-        OR: [
-          { instituteName: { contains: query, mode: "insensitive" } },
-          { subdomain: { contains: query, mode: "insensitive" } },
-        ],
-        // Only return institutes that are active/trial
-        accountStatus: { in: ["active", "trial"] },
-      },
-      take: limit,
-      select: {
-        id: true,
-        instituteName: true,
-        subdomain: true,
-        logo: true,
-        address: true,
-        type: true,
-      }
-    });
+  async search(query: string, skip: number = 0, take: number = 20) {
+    const where = {
+      OR: [
+        { instituteName: { contains: query, mode: "insensitive" as const } },
+        { subdomain: { contains: query, mode: "insensitive" as const } },
+        { address: { contains: query, mode: "insensitive" as const } },
+      ],
+      // Only return institutes that are active/trial
+      accountStatus: { in: ["active", "trial"] },
+    };
+
+    const [institutes, total] = await Promise.all([
+      this.model.findMany({
+        where,
+        skip,
+        take,
+        select: {
+          id: true,
+          instituteName: true,
+          subdomain: true,
+          logo: true,
+          address: true,
+          type: true,
+        },
+        orderBy: { instituteName: "asc" },
+      }),
+      this.model.count({ where }),
+    ]);
+
+    return { institutes, total };
   }
 }
 

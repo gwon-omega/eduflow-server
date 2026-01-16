@@ -4,8 +4,19 @@ import joinRequestService from "../services/joinRequest.service";
 // GET /institutes/public - List all public institutes
 export const getPublicInstitutes = async (req: Request, res: Response) => {
   try {
-    const institutes = await joinRequestService.getPublicInstitutes();
-    res.json({ institutes });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const skip = (page - 1) * limit;
+
+    const { institutes, total } = await joinRequestService.getPublicInstitutes(skip, limit);
+
+    res.json({
+      success: true,
+      institutes,
+      total,
+      page,
+      limit
+    });
   } catch (error: any) {
     console.error("Error fetching public institutes:", error);
     res.status(500).json({ message: "Failed to fetch institutes" });

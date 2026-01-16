@@ -1,27 +1,37 @@
 import joinRequestRepo from "../repository/joinRequest.repo";
 import instituteRepo from "../repository/institute.repo";
 import prisma from "@core/database/prisma";
+import { Prisma } from "@prisma/client";
 
 class JoinRequestService {
   private readonly MAX_PENDING_REQUESTS = 3;
 
-  async getPublicInstitutes() {
-    return prisma.institute.findMany({
-      where: {
-        isActive: true,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        instituteName: true,
-        subdomain: true,
-        logo: true,
-        address: true,
-        type: true,
-      },
-      orderBy: { instituteName: "asc" },
-      take: 100,
-    });
+  async getPublicInstitutes(skip: number = 0, take: number = 12) {
+    const where: Prisma.InstituteWhereInput = {
+      isActive: true,
+      deletedAt: null,
+      accountStatus: { in: ["active", "trial"] },
+    };
+
+    const [institutes, total] = await Promise.all([
+      prisma.institute.findMany({
+        where,
+        select: {
+          id: true,
+          instituteName: true,
+          subdomain: true,
+          logo: true,
+          address: true,
+          type: true,
+        },
+        orderBy: { instituteName: "asc" },
+        skip,
+        take,
+      }),
+      prisma.institute.count({ where }),
+    ]);
+
+    return { institutes, total };
   }
 
   async createJoinRequest(
@@ -99,46 +109,59 @@ class JoinRequestService {
       throw new Error("Not authorized to review this request");
     }
 
-    // Update status
-    const updated = await joinRequestRepo.updateStatus(
-      requestId,
-      status,
-      reviewedBy
-    );
+    // Use transaction to ensure status update and profile creation are atomic
+    return prisma.$transaction(async (tx) => {
+      // Update status
+      const updated = await tx.instituteJoinRequest.update({
+        where: { id: requestId },
+        data: {
+          status,
+          reviewedBy,
+          reviewedAt: new Date(),
+        },
+        include: {
+          user: true,
+          institute: true,
+        },
+      });
 
-    // If approved, create the student/teacher profile
-    if (status === "approved" && request.user) {
-      const user = request.user;
-      if (request.role === "student") {
-        await prisma.student.create({
-          data: {
-            instituteId: request.instituteId,
-            userId: request.userId,
-            firstName: user.firstName || "Unknown",
-            lastName: user.lastName || "User",
-            email: user.email,
-            phone: user.phone,
-            enrolledDate: new Date(),
-          },
-        });
-      } else if (request.role === "teacher") {
-        await prisma.teacher.create({
-          data: {
-            instituteId: request.instituteId,
-            userId: request.userId,
-            firstName: user.firstName || "Unknown",
-            lastName: user.lastName || "User",
-            email: user.email,
-            phone: user.phone || "",
-            experience: 0,
-            salary: 0,
-            joinedDate: new Date(),
-          },
-        });
+      // If approved, create the student/teacher profile
+      if (status === "approved" && request.user) {
+        const user = request.user;
+
+        if (request.role === "student") {
+          await tx.student.create({
+            data: {
+              instituteId: request.instituteId,
+              userId: request.userId,
+              firstName: user.firstName || "Unknown",
+              lastName: user.lastName || "User",
+              email: user.email,
+              phone: user.phone,
+              photo: user.profileImage, // Map profileImage to student photo
+              enrolledDate: new Date(),
+            },
+          });
+        } else if (request.role === "teacher") {
+          await tx.teacher.create({
+            data: {
+              instituteId: request.instituteId,
+              userId: request.userId,
+              firstName: user.firstName || "Unknown",
+              lastName: user.lastName || "User",
+              email: user.email,
+              phone: user.phone || "",
+              photo: user.profileImage, // Map profileImage to teacher photo
+              experience: 0,
+              salary: 0,
+              joinedDate: new Date(),
+            },
+          });
+        }
       }
-    }
 
-    return updated;
+      return updated;
+    });
   }
 }
 

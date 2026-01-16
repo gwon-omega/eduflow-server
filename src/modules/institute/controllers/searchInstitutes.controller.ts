@@ -11,20 +11,18 @@ import instituteRepo from "../repository/institute.repo";
 export const searchInstitutes = async (req: Request, res: Response) => {
   try {
     const query = (req.query.q as string) || "";
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const skip = (page - 1) * limit;
 
-    // Efficiency: Don't search if query is too short (optional)
-    if (query.length < 2) {
-      return res.json({
-        success: true,
-        institutes: [],
-      });
-    }
-
-    const institutes = await instituteRepo.search(query, 20);
+    const { institutes, total } = await instituteRepo.search(query, skip, limit);
 
     res.json({
       success: true,
       institutes,
+      total,
+      page,
+      limit,
     });
   } catch (error: any) {
     console.error("Search institutes error:", error);
