@@ -10,7 +10,7 @@ export class AttendanceService {
     if (data.status === "absent" && data.studentId) {
       await notificationService.createNotification({
         userId: data.studentId, // In a real scenario, this might be the linked parent's ID
-        type: NotificationType.INFO,
+        type: NotificationType.info,
         title: "Absence Alert",
         message: `Student was marked absent on ${new Date().toLocaleDateString()}.`,
         category: "attendance"

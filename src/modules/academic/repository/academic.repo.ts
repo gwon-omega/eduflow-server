@@ -37,6 +37,25 @@ export class AcademicRepo extends BaseRepository<Assessment> {
       orderBy: { marks: "desc" },
     });
   }
+
+  async getResultsByStudentTerminal(studentId: string, terminalId: string) {
+    // Note: 'terminalId' is currently treated as a placeholder for filtering a set of assessments.
+    // In a future update, we will add a 'Terminal' model to the schema.
+    return (prisma as any).assessmentResult.findMany({
+      where: {
+        studentId,
+      },
+      include: {
+        assessment: true,
+      },
+    }).then((results: any[]) =>
+      results.map((r) => ({
+        ...r,
+        obtainedMarks: r.marks,
+        totalMarks: r.assessment.maxMarks,
+      }))
+    );
+  }
 }
 
 export default new AcademicRepo();
