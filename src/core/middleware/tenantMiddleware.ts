@@ -60,10 +60,11 @@ const tenantMiddleware = (req: IExtendedRequest, res: Response, next: NextFuncti
     try {
         const sanitizedTenant = sanitizeTableSuffix(subdomain.replace(/-/g, '_'));
 
-        (req as any).tenant = {
+        req.tenant = {
             subdomain,
             sanitizedId: sanitizedTenant
         };
+        console.log("[Auth Debug] Tenant resolved:", req.tenant);
 
         next();
     } catch (error: any) {
