@@ -102,7 +102,11 @@ export const authenticate = async (req: IExtendedRequest, res: Response, next: N
     }, () => {
       next();
     });
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (error: any) {
+    console.error("[Auth Debug] Global Middleware Error:", error.message || error);
+    return res.status(401).json({
+      message: "Invalid or expired token",
+      debug: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 };

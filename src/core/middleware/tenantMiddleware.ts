@@ -11,7 +11,8 @@ const RESERVED_SUBDOMAINS = ["www", "app", "student", "teacher", "admin", "super
  * Middleware to resolve tenant (institute) from subdomain/host
  */
 const tenantMiddleware = (req: IExtendedRequest, res: Response, next: NextFunction): void => {
-    const host = req.headers.host;
+    // Support X-Forwarded-Host from proxy, fallback to req.headers.host
+    const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
     const baseDomain = process.env.BASE_DOMAIN || "eduflow.jeevanbhatt.com.np"; // Default for production
 
     if (!host) {
