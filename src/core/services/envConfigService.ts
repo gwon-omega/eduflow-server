@@ -7,7 +7,12 @@ const environmentSchema = z.object({
   DIRECT_URL: z.string().optional(),
   JWT_SECRET: z.string().min(32).default("your-jwt-secret-key-here-minimum-32-characters"),
   JWT_REFRESH_SECRET: z.string().min(32).default("your-refresh-secret-key-here-minimum-32-characters"),
-  BASE_URL: z.string().optional().default("http://localhost:3002"),
+  // Standardized naming
+  SERVER_URL: z.string().optional().default("http://localhost:4000"),
+  CLIENT_URL: z.string().optional().default("http://localhost:3000"),
+  TENANT_DOMAIN: z.string().optional().default("localhost"),
+  // Keep legacy for compatibility during migration if needed, but mark as optional
+  BASE_URL: z.string().optional(),
   FRONTEND_URL: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),

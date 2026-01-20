@@ -28,12 +28,12 @@ export const googleSheetsCallback = async (req: Request, res: Response) => {
     await googleSheetsService.saveTokens(instituteId as string, tokens);
 
     // Redirect back to frontend
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/admin/settings/integrations?status=success&provider=google_sheets`);
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    res.redirect(`${clientUrl}/admin/settings/integrations?status=success&provider=google_sheets`);
   } catch (error: any) {
     console.error("Google Sheets Callback Error:", error.message);
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/admin/settings/integrations?status=error&message=${encodeURIComponent(error.message)}`);
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    res.redirect(`${clientUrl}/admin/settings/integrations?status=error&message=${encodeURIComponent(error.message)}`);
   }
 };
 

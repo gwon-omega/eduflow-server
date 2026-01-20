@@ -22,8 +22,8 @@ export const authenticate = async (req: IExtendedRequest, res: Response, next: N
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    console.log("[Auth Debug] Verifying token. Secret length:", JWT_SECRET_UINT8.length);
     try {
+      console.log("[Auth Debug] Verifying token length:", token.length);
       const { payload } = await jose.jwtVerify(token, JWT_SECRET_UINT8);
       console.log("[Auth Debug] Token verified successfully for user:", payload.id);
 
@@ -35,7 +35,11 @@ export const authenticate = async (req: IExtendedRequest, res: Response, next: N
       req.user = payload as any;
     } catch (jwtErr: any) {
       console.error("[Auth Debug] JWT Verify failed:", jwtErr.message);
-      return res.status(401).json({ message: "Invalid or expired token" });
+      return res.status(401).json({
+        message: "Invalid or expired token",
+        debug: process.env.NODE_ENV === "development" ? jwtErr.message : undefined,
+        code: jwtErr.code || "JWT_ERROR"
+      });
     }
 
     // 2. Resolve Context (Which institute are they accessing?)
@@ -105,7 +109,8 @@ export const authenticate = async (req: IExtendedRequest, res: Response, next: N
   } catch (error: any) {
     console.error("[Auth Debug] Global Middleware Error:", error.message || error);
     return res.status(401).json({
-      message: "Invalid or expired token",
+      message: "Authentication failed",
+      code: "AUTH_ERROR",
       debug: process.env.NODE_ENV === "development" ? error.message : undefined
     });
   }

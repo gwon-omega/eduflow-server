@@ -34,12 +34,12 @@ export const handleGlobalImeCallback = async (req: Request, res: Response) => {
     if (isValid) {
       console.log(`Global IME Success: ${responseData.reference_number}`);
       // Update DB
-      return res.redirect(`${process.env.FRONTEND_URL}/payment/success`);
+      return res.redirect(`${process.env.CLIENT_URL}/payment/success`);
     }
 
-    res.redirect(`${process.env.FRONTEND_URL}/payment/failure`);
+    res.redirect(`${process.env.CLIENT_URL}/payment/failure`);
   } catch (error: any) {
     console.error("Global IME Callback Error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/payment/failure`);
+    res.redirect(`${process.env.CLIENT_URL}/payment/failure`);
   }
 };

@@ -35,10 +35,10 @@ export const notionCallback = async (req: Request, res: Response) => {
     await notionService.saveTokens(instituteId, tokens);
 
     // Redirect to frontend settings page
-    res.redirect(`${process.env.FRONTEND_URL}/admin/settings/integrations?status=success&provider=notion`);
+    res.redirect(`${process.env.CLIENT_URL}/admin/settings/integrations?status=success&provider=notion`);
   } catch (error: any) {
     console.error("Notion OAuth Error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/admin/settings/integrations?status=error&message=${encodeURIComponent(error.message)}`);
+    res.redirect(`${process.env.CLIENT_URL}/admin/settings/integrations?status=error&message=${encodeURIComponent(error.message)}`);
   }
 };
 

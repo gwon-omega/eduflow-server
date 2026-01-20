@@ -14,8 +14,8 @@ export const initiateEsewaPayment = async (req: Request, res: Response) => {
     const config = await esewaService.getPaymentConfig(
       amount,
       transactionId,
-      successUrl || `${process.env.FRONTEND_URL}/payment/success`,
-      failureUrl || `${process.env.FRONTEND_URL}/payment/failure`,
+      successUrl || `${process.env.CLIENT_URL}/payment/success`,
+      failureUrl || `${process.env.CLIENT_URL}/payment/failure`,
       instituteId
     );
 
@@ -42,9 +42,9 @@ export const handleEsewaSuccess = async (req: Request, res: Response) => {
        // Update DB logic here
     }
 
-    res.redirect(`${process.env.FRONTEND_URL}/payment/success?ref=${decodedJson.transaction_code}`);
+    res.redirect(`${process.env.CLIENT_URL}/payment/success?ref=${decodedJson.transaction_code}`);
   } catch (error: any) {
     console.error("eSewa Callback Error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/payment/failure`);
+    res.redirect(`${process.env.CLIENT_URL}/payment/failure`);
   }
 };

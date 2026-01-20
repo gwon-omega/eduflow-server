@@ -11,5 +11,10 @@ export const JWT_CONFIG = {
   REFRESH_EXPIRATION: "7d",
 } as const;
 
+if (process.env.NODE_ENV !== "test") {
+  if (!process.env.JWT_SECRET) console.warn("⚠️ [Security] JWT_SECRET is not set, using insecure default!");
+  if (!process.env.JWT_REFRESH_SECRET) console.warn("⚠️ [Security] JWT_REFRESH_SECRET is not set, using insecure default!");
+}
+
 export const JWT_SECRET_UINT8 = new TextEncoder().encode(JWT_CONFIG.SECRET);
 export const JWT_REFRESH_SECRET_UINT8 = new TextEncoder().encode(JWT_CONFIG.REFRESH_SECRET);

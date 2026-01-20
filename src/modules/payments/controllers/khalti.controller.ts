@@ -12,8 +12,8 @@ export const initiateKhaltiPayment = async (req: Request, res: Response) => {
     }
 
     const payload = {
-      return_url: returnUrl || `${process.env.FRONTEND_URL}/payment/khalti/callback`,
-      website_url: websiteUrl || process.env.FRONTEND_URL || "http://localhost:3000",
+      return_url: returnUrl || `${process.env.CLIENT_URL}/payment/khalti/callback`,
+      website_url: websiteUrl || process.env.CLIENT_URL || "http://localhost:3000",
       amount: amount * 100, // Convert Rs to paisa
       purchase_order_id: orderId,
       purchase_order_name: orderName || "Product Purchase",

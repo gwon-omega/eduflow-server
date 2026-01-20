@@ -67,8 +67,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     // Build reset URL
-    const frontendUrl = process.env.FRONTEND_URL || "https://eduflow.jeevanbhatt.com.np";
-    const resetUrl = `${frontendUrl}/reset-password?email=${encodeURIComponent(user.email)}&otp=${otp}`;
+    const clientUrl = process.env.CLIENT_URL || "https://eduflow.jeevanbhatt.com.np";
+    const resetUrl = `${clientUrl}/reset-password?email=${encodeURIComponent(user.email)}&otp=${otp}`;
 
     // Send email
     const emailContent = passwordResetEmail(user.firstName || "User", user.email, otp);
