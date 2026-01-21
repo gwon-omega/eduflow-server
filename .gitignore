@@ -22,6 +22,15 @@ lib-cov/
 .nyc_output/
 test-results/
 
+# Test scripts & E2E artifacts (sensitive test payloads)
+src/test/
+tests/
+**/e2e-*
+**/*e2e*
+E2E_RESULTS.txt
+thunder-collection_eduflow.json
+src/scripts/
+
 # Build output
 dist/
 build/
