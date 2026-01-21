@@ -54,7 +54,7 @@
       "containerId": "f1",
       "body": {
         "type": "json",
-        "raw": "{\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin@eduflow.com\",\n  \"password\": \"pass123\",\n  \"role\": \"institute\"\n}"
+        "raw": "{\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin@eduflow.com\",\n  \"password\": \"<REDACTED_PASSWORD>\",\n  \"role\": \"institute\"\n}"
       }
     },
     {
@@ -64,7 +64,7 @@
       "containerId": "f1",
       "body": {
         "type": "json",
-        "raw": "{\n  \"email\": \"admin@eduflow.com\",\n  \"password\": \"pass123\"\n}"
+        "raw": "{\n  \"email\": \"admin@eduflow.com\",\n  \"password\": \"<REDACTED_PASSWORD>\"\n}"
       }
     },
     {
