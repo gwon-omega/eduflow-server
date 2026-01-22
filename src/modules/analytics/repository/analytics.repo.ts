@@ -72,13 +72,19 @@ export class AnalyticsRepo {
 
     // Monthly revenue history (last 6 months)
     const revenueHistory = await prisma.feePayment.groupBy({
-      by: ['paidAt'],
+      by: ['paymentDate'],
       where: {
-        paidAt: { gte: sixMonthsAgo },
+        paymentDate: { gte: sixMonthsAgo },
       },
       _sum: {
         amountPaid: true,
       },
+    });
+
+    const totalRevenueSum = await prisma.feePayment.aggregate({
+      _sum: {
+        amountPaid: true,
+      }
     });
 
     // Recent Institutes
@@ -87,10 +93,10 @@ export class AnalyticsRepo {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
-        name: true,
+        instituteName: true,
         subdomain: true,
         createdAt: true,
-        planType: true,
+        subscriptionTier: true,
         _count: {
           select: { students: true }
         }
@@ -102,7 +108,7 @@ export class AnalyticsRepo {
       totalUsers,
       totalStudents,
       totalTeachers,
-      totalRevenue: Number(totalRevenue._sum.amountPaid || 0),
+      totalRevenue: Number(totalRevenueSum._sum.amountPaid || 0),
       instituteGrowth,
       revenueHistory,
       recentInstitutes,

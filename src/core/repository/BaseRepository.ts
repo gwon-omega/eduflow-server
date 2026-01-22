@@ -23,6 +23,10 @@ export abstract class BaseRepository<T> {
     return this.model.findMany(params);
   }
 
+  async findAll(where?: any): Promise<T[]> {
+    return this.model.findMany({ where });
+  }
+
   async findFirst(params: {
     where?: any;
     orderBy?: any;

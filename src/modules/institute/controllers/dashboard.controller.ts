@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import dashboardService from "../services/dashboard.service";
-import { BaseController } from "@core/controllers/BaseController";
 
-export class DashboardController extends BaseController {
+export class DashboardController {
   async getOverview(req: Request, res: Response) {
     try {
       const instituteId = (req as any).instituteId || (req as any).tenantId;

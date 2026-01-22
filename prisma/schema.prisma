@@ -354,6 +354,7 @@ model Course {
   id          String      @id @default(uuid()) @db.Uuid
   instituteId String      @map("institute_id") @db.Uuid
   categoryId  String      @map("category_id") @db.Uuid
+  curriculumId String?    @map("curriculum_id") @db.Uuid // Link to CDC/NEB Curriculum
   name        String      @map("course_name")
   description String?     @map("course_description")
   price       Decimal     @map("course_price") @db.Decimal(10, 2)
@@ -367,6 +368,7 @@ model Course {
 
   institute Institute       @relation(fields: [instituteId], references: [id], onDelete: Cascade)
   category  Category        @relation(fields: [categoryId], references: [id])
+  curriculum CurriculumMapping? @relation(fields: [curriculumId], references: [id])
   chapters    Chapter[]
   assignments Assignment[]
   assessments Assessment[]
@@ -375,10 +377,27 @@ model Course {
 
   @@index([instituteId])
   @@index([categoryId])
+  @@index([curriculumId])
   @@index([isPublished])
   @@index([createdAt])
   @@index([instituteId, isPublished])
   @@map("courses")
+}
+
+model CurriculumMapping {
+  id              String      @id @default(uuid()) @db.Uuid
+  standard        String      @default("CDC") // CDC, NEB, CBSE
+  grade           String      // 1, 2, ... 12, Bachelor, etc
+  subject         String      // Mathematics, Science, etc
+  syllabusVersion String?     @map("syllabus_version") // e.g., "2078 BS"
+  description     String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  courses         Course[]
+
+  @@unique([standard, grade, subject, syllabusVersion])
+  @@map("curriculum_mappings")
 }
 
 model Student {
