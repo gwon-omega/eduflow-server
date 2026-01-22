@@ -70,10 +70,30 @@ export class AnalyticsRepo {
       _count: true,
     });
 
-    // Revenue stats (simplified for now)
-    const totalRevenue = await prisma.feePayment.aggregate({
+    // Monthly revenue history (last 6 months)
+    const revenueHistory = await prisma.feePayment.groupBy({
+      by: ['paidAt'],
+      where: {
+        paidAt: { gte: sixMonthsAgo },
+      },
       _sum: {
         amountPaid: true,
+      },
+    });
+
+    // Recent Institutes
+    const recentInstitutes = await prisma.institute.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        createdAt: true,
+        planType: true,
+        _count: {
+          select: { students: true }
+        }
       }
     });
 
@@ -83,7 +103,14 @@ export class AnalyticsRepo {
       totalStudents,
       totalTeachers,
       totalRevenue: Number(totalRevenue._sum.amountPaid || 0),
-      instituteGrowth
+      instituteGrowth,
+      revenueHistory,
+      recentInstitutes,
+      distribution: {
+        students: totalStudents,
+        teachers: totalTeachers,
+        admins: totalUsers - totalStudents - totalTeachers
+      }
     };
   }
 }

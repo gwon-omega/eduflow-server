@@ -11,6 +11,7 @@ import {
   getInstituteJoinRequests,
   reviewJoinRequest,
 } from "../controllers/joinRequest.controller";
+import dashboardController from "../controllers/dashboard.controller";
 import { searchInstitutes } from "../controllers/searchInstitutes.controller";
 import { authenticate } from "../../../core/middleware/authenticate";
 import { registrationLimiter, joinRequestLimiter } from "../../../core/middleware/rateLimiter";
@@ -28,6 +29,7 @@ router.get("/admin/all", authenticate, getAllInstitutes);
 // Authenticated routes
 router.post("/", authenticate, registrationLimiter, createInstitute);
 router.get("/my", authenticate, getMyInstitutes);
+router.get("/dashboard/overview", authenticate, dashboardController.getOverview);
 router.post("/:id/subdomain", authenticate, updateSubdomain);
 
 // Join request routes
