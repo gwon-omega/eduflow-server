@@ -8,8 +8,11 @@ import { getTeacherStats } from "../controllers/getTeacherStats.controller";
 import { getTeacherStudents } from "../controllers/getTeacherStudents.controller";
 import { getTeacherSchedule } from "../controllers/getTeacherSchedule.controller";
 import { getTeacherAssignments } from "../controllers/getTeacherAssignments.controller";
+import { createTeacher } from "../controllers/createTeacher.controller";
+import multer from "multer";
 
 const router = Router();
+const upload = multer();
 
 router.get("/profile", authenticate, getProfile);
 router.put("/profile", authenticate, updateProfile);
@@ -19,5 +22,7 @@ router.get("/students", authenticate, getTeacherStudents);
 router.get("/schedule", authenticate, getTeacherSchedule);
 router.get("/assignments", authenticate, getTeacherAssignments);
 router.get("/institute/all", authenticate, getInstituteTeachers);
+router.get("/", authenticate, getInstituteTeachers);
+router.post("/", authenticate, upload.single("teacherPhoto"), createTeacher);
 
 export default router;
