@@ -1,7 +1,7 @@
 import joinRequestRepo from "../repository/joinRequest.repo";
 import instituteRepo from "../repository/institute.repo";
 import prisma from "@core/database/prisma";
-import { Prisma, NotificationType } from "@prisma/client";
+import { Prisma, NotificationType, JoinRequestRole } from "@prisma/client";
 import notificationService from "../../notification/services/notification.service";
 
 class JoinRequestService {
@@ -58,8 +58,39 @@ class JoinRequestService {
       userId,
       instituteId
     );
+
     if (existing) {
-      throw new Error("You have already requested to join this institute");
+      if (existing.status === 'banned') {
+        throw new Error("You are permanently banned from joining this institute.");
+      }
+
+      if (existing.status === 'approved') {
+        throw new Error("You are already a member of this institute.");
+      }
+
+      if (existing.status === 'pending') {
+        throw new Error("You have already requested to join this institute");
+      }
+
+      if (existing.status === 'rejected') {
+        // Check cooldown (1 hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        if (existing.updatedAt > oneHourAgo) {
+          const remainingMinutes = Math.ceil((existing.updatedAt.getTime() - oneHourAgo.getTime()) / 60000);
+          throw new Error(`You can request again in ${remainingMinutes} minutes.`);
+        }
+
+        // Re-activate the request
+        return await prisma.instituteJoinRequest.update({
+          where: { id: existing.id },
+          data: {
+            status: 'pending',
+            role: role as JoinRequestRole, // Allow role change on re-request
+            message,
+            updatedAt: new Date()
+          }
+        });
+      }
     }
 
     // Check pending request limit
@@ -74,7 +105,7 @@ class JoinRequestService {
     const request = await joinRequestRepo.create({
       userId,
       instituteId,
-      role,
+      role: role as JoinRequestRole,
       message,
     });
 
@@ -110,7 +141,7 @@ class JoinRequestService {
 
   async reviewRequest(
     requestId: string,
-    status: "approved" | "rejected",
+    status: "approved" | "rejected" | "banned",
     reviewedBy: string
   ) {
     // Get the request
@@ -177,15 +208,31 @@ class JoinRequestService {
       }
 
       // Notify User of the result
+      let title = "Join Request Update";
+      let message = `Your request to join ${institute.instituteName} has been updated to ${status}.`;
+      let type: NotificationType = NotificationType.info;
+
+      if (status === "approved") {
+        title = "Join Request Approved";
+        message = `Your request to join ${institute.instituteName} has been approved.`;
+        type = NotificationType.success;
+      } else if (status === "rejected") {
+        title = "Join Request Rejected";
+        message = `Your request to join ${institute.instituteName} has been declined. You can try again in 1 hour.`;
+        type = NotificationType.warning;
+      } else if (status === "banned") {
+        title = "Access Revoked";
+        message = `You have been permanently banned from joining ${institute.instituteName}.`;
+        type = NotificationType.alert;
+      }
+
       await notificationService.createNotification({
         userId: request.userId,
-        type: status === "approved" ? NotificationType.success : NotificationType.warning,
-        title: status === "approved" ? "Join Request Approved" : "Join Request Rejected",
-        message: status === "approved"
-          ? `Your request to join ${institute.instituteName} has been approved.`
-          : `Your request to join ${institute.instituteName} has been declined.`,
+        type,
+        title,
+        message,
         category: "system",
-        link: status === "approved" ? "/portals/student/dashboard" : "/institutes",
+        link: status === "approved" ? "/portals/student/dashboard" : "/join-institute",
         metadata: { status, instituteId: request.instituteId }
       });
 
