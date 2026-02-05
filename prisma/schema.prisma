@@ -57,6 +57,13 @@ enum ResourceStatus {
   out_of_stock
 }
 
+enum SubscriptionTier {
+  trial
+  starter
+  professional
+  enterprise
+}
+
 // ============================================
 // STUDENT CART MODEL (for controller compatibility)
 // ============================================
@@ -781,13 +788,6 @@ enum AccountStatus {
   suspended
   inactive
   pending_verification
-}
-
-enum SubscriptionTier {
-  trial
-  basic
-  pro
-  enterprise
 }
 
 enum InstituteAccountStatus {

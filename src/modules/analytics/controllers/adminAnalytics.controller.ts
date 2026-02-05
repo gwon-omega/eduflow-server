@@ -1,6 +1,7 @@
 import { Response } from "express";
 import prisma from "@core/database/prisma";
 import { IExtendedRequest } from "@core/middleware/type";
+import os from "os";
 
 /**
  * Get all users for super admin
@@ -15,10 +16,10 @@ export const getAllUsers = async (req: IExtendedRequest, res: Response) => {
       return res.status(401).json({ success: false, message: "Not authenticated" });
     }
 
-    if (userRole !== "superadmin" && userRole !== "admin") {
+    if (userRole !== "super-admin" && userRole !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
-
+// ... (rest of getAllUsers)
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = (req.query.search as string) || "";
@@ -89,7 +90,7 @@ export const getSystemHealth = async (req: IExtendedRequest, res: Response) => {
   try {
     const userRole = req.user?.role;
 
-    if (userRole !== "superadmin" && userRole !== "admin") {
+    if (userRole !== "super-admin" && userRole !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
@@ -110,9 +111,16 @@ export const getSystemHealth = async (req: IExtendedRequest, res: Response) => {
       prisma.studentCourse.count(),
     ]);
 
-    // Calculate uptime (mock for now - in production would use actual server metrics)
-    const uptimeHours = Math.floor(process.uptime() / 3600);
+    // Calculate uptime
+    const uptimeSeconds = process.uptime();
+    const uptimeHours = Math.floor(uptimeSeconds / 3600);
     const uptimeDays = Math.floor(uptimeHours / 24);
+
+    // Real system metrics
+    const totalMem = os.totalmem() / 1024 / 1024; // MB
+    const freeMem = os.freemem() / 1024 / 1024; // MB
+    const usedMem = totalMem - freeMem;
+    const cpuLoad = os.loadavg()[0]; // 1-minute load average
 
     return res.status(200).json({
       status: "healthy",
@@ -124,8 +132,17 @@ export const getSystemHealth = async (req: IExtendedRequest, res: Response) => {
         enrollments: { total: totalEnrollments },
       },
       database: "connected",
-      serverLoad: Math.random() * 30 + 10, // Simulated load percentage
-      memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+      redis: "not setup",
+      serverLoad: cpuLoad,
+      memoryUsage: {
+        totalMB: Math.round(totalMem),
+        usedMB: Math.round(usedMem),
+        percentage: Math.round((usedMem / totalMem) * 100)
+      },
+      cpu: {
+        cores: os.cpus().length,
+        model: os.cpus()[0].model
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -145,7 +162,7 @@ export const getRevenueAnalytics = async (req: IExtendedRequest, res: Response) 
   try {
     const userRole = req.user?.role;
 
-    if (userRole !== "superadmin" && userRole !== "admin") {
+    if (userRole !== "super-admin" && userRole !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 

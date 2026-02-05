@@ -20,6 +20,7 @@ import progressRoutes from "./progress/routes/index";
 import attendanceRoutes from "./attendance/routes/index";
 import integrationRoutes from "./integration/routes/index";
 import paymentRoutes from "./payments/routes/index";
+import blogRoutes from "./blog/routes/index";
 
 const router: Router = express.Router();
 
@@ -42,5 +43,6 @@ router.use("/progress", progressRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/integration", integrationRoutes);
 router.use("/payment", paymentRoutes);
+router.use("/blog", blogRoutes);
 
 export default router;

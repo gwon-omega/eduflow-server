@@ -4,6 +4,7 @@ import { getMyInstitutes } from "../controllers/getMyInstitutes.controller";
 import { updateSubdomain } from "../controllers/updateSubdomain.controller";
 import { getInstituteBySlug } from "../controllers/getInstituteBySlug.controller";
 import { getAllInstitutes } from "../controllers/getAllInstitutes.controller";
+import { getSettings } from "../controllers/getSettings.controller";
 import {
   getPublicInstitutes,
   requestJoinInstitute,
@@ -29,6 +30,7 @@ router.get("/admin/all", authenticate, getAllInstitutes);
 // Authenticated routes
 router.post("/", authenticate, registrationLimiter, createInstitute);
 router.get("/my", authenticate, getMyInstitutes);
+router.get("/settings", authenticate, getSettings);
 router.get("/dashboard/overview", authenticate, dashboardController.getOverview);
 router.post("/:id/subdomain", authenticate, updateSubdomain);
 
