@@ -64,6 +64,12 @@ enum SubscriptionTier {
   enterprise
 }
 
+enum BillingCycle {
+  pay_as_you_go
+  monthly
+  yearly
+}
+
 // ============================================
 // STUDENT CART MODEL (for controller compatibility)
 // ============================================
@@ -224,6 +230,7 @@ model Institute {
   emailVerified            Boolean                @default(false) @map("email_verified")
   phoneVerified            Boolean                @default(false) @map("phone_verified")
   subscriptionTier         SubscriptionTier       @default(trial) @map("subscription_tier")
+  billingCycle             BillingCycle           @default(monthly) @map("billing_cycle")
   subscriptionExpiresAt    DateTime?              @map("subscription_expires_at")
   trialStartedAt           DateTime?              @map("trial_started_at")
   trialRemindersSent       Int                    @default(0) @map("trial_reminders_sent")

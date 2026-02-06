@@ -16,9 +16,19 @@ export class PaymentSettingsService {
     }
 
     // 3. Local Payment Constraint (Khalti XOR eSewa)
-    // Only applies to non-Super Admin (Institutes)
-    if (userRole !== "SUPER_ADMIN") {
-      if (provider === "khalti" || provider === "esewa") {
+    // Only applies to Trial/Starter tiers (Professional+ can use both)
+    if (provider === "khalti" || provider === "esewa") {
+      // Get institute's subscription tier
+      const institute = await prisma.institute.findUnique({
+        where: { id: instituteId },
+        select: { subscriptionTier: true }
+      });
+
+      const tier = institute?.subscriptionTier || 'trial';
+      const isProfessionalOrAbove = tier === 'professional' || tier === 'enterprise';
+
+      // Only enforce XOR for Trial/Starter tiers
+      if (!isProfessionalOrAbove) {
         const otherProvider = provider === "khalti" ? "esewa" : "khalti";
 
         const existingConflict = await prisma.instituteIntegration.findUnique({
@@ -31,7 +41,7 @@ export class PaymentSettingsService {
         });
 
         if (existingConflict && existingConflict.isActive) {
-          throw new Error(`Cannot enable ${provider} when ${otherProvider} is active. Only one local payment gateway is allowed.`);
+          throw new Error(`Cannot enable ${provider} when ${otherProvider} is active. Upgrade to Professional to use both gateways.`);
         }
       }
     }
