@@ -94,8 +94,8 @@ export const getAllInstitutes = async (req: IExtendedRequest, res: Response) => 
             : inst.accountStatus === "trial" ? "pending"
             : inst.isActive ? "active" : "inactive",
       plan: inst.subscriptionTier === "enterprise" ? "Enterprise"
-          : inst.subscriptionTier === "pro" ? "Professional"
-          : inst.subscriptionTier === "basic" ? "Basic"
+          : inst.subscriptionTier === "professional" ? "Professional"
+          : inst.subscriptionTier === "starter" ? "Starter"
           : "Trial",
       students: inst._count.students,
       teachers: inst._count.teachers,
