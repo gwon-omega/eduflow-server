@@ -8,8 +8,11 @@ export class StudentRepo extends TenantRepository<Student> {
   }
 
   async findByUserId(userId: string): Promise<Student | null> {
-    return this.model.findUnique({
-      where: { userId },
+    // userId is not unique in Student (a user can be a student in many institutes)
+    // We use findFirst to get the most recent or primary entry
+    return this.model.findFirst({
+      where: { userId, deletedAt: null },
+      orderBy: { enrolledDate: 'desc' }
     });
   }
 

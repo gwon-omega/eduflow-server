@@ -33,6 +33,7 @@ router.get("/schedule", authenticate, getStudentSchedule);
 router.get("/deadlines", authenticate, getStudentDeadlines);
 router.get("/activity/learning", authenticate, getStudentActivity);
 router.get("/courses/progress", authenticate, getStudentCourseProgress);
+router.get("/courses/enrolled", authenticate, getEnrolledCourses);
 router.post("/courses/enroll", authenticate, enrollInCourse);
 router.get("/gpa/:terminalId", authenticate, getStudentGPA);
 

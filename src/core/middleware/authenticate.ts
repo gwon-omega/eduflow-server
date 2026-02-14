@@ -78,13 +78,22 @@ export const authenticate = async (req: IExtendedRequest, res: Response, next: N
     else {
       req.instituteId = (req.query?.instituteId as string) || (req.body?.instituteId as string);
 
-      // Fallback: Default to their own institute if they are an admin
-      if (!req.instituteId && (req.user?.role === "institute" || req.user?.role === "admin")) {
-        const owned = await prisma.institute.findFirst({
-           where: { ownerId: req.user?.id },
-           select: { id: true }
-        });
-        if (owned) req.instituteId = owned.id;
+      // Fallback: Default to their own institute if they are an admin or student
+      if (!req.instituteId) {
+        if (req.user?.role === "institute" || req.user?.role === "admin") {
+          const owned = await prisma.institute.findFirst({
+             where: { ownerId: req.user?.id },
+             select: { id: true }
+          });
+          if (owned) req.instituteId = owned.id;
+        } else if (req.user?.role === "student") {
+          const student = await prisma.student.findFirst({
+             where: { userId: req.user?.id },
+             select: { instituteId: true },
+             orderBy: { enrolledDate: 'desc' }
+          });
+          if (student) req.instituteId = student.instituteId;
+        }
       }
     }
 
