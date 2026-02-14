@@ -3,6 +3,8 @@ import instituteRepo from "../repository/institute.repo";
 import prisma from "@core/database/prisma";
 import { Prisma, NotificationType, JoinRequestRole } from "@prisma/client";
 import notificationService from "../../notification/services/notification.service";
+import studentRepo from "../../student/repository/student.repo";
+import teacherRepo from "../../teacher/repository/teacher.repo";
 
 class JoinRequestService {
   private readonly MAX_PENDING_REQUESTS = 3;
@@ -125,7 +127,100 @@ class JoinRequestService {
   }
 
   async getUserRequests(userId: string) {
-    return joinRequestRepo.findByUserId(userId);
+    // 1. Fetch real join requests
+    const realRequests = await joinRequestRepo.findByUserId(userId);
+
+    // 2. Fetch direct student memberships
+    const studentProfiles = (await studentRepo.findAllByUserId(userId)) as any[];
+
+    // 3. Fetch direct teacher memberships
+    const teacherProfiles = (await teacherRepo.findAllByUserId(userId)) as any[];
+
+    // 4. Fetch owned institutes
+    const ownedInstitutes = (await instituteRepo.findByOwner(userId)) as any[];
+
+    // Map to keep track of institutes we already have a record for (to avoid duplicates)
+    // Key: instituteId + role
+    const requestMap = new Map();
+
+    // Add real requests first (they have the most detail like messages/status)
+    realRequests.forEach(req => {
+      requestMap.set(`${req.instituteId}-${req.role}`, req);
+    });
+
+    // Add student memberships as "approved" virtual requests
+    studentProfiles.forEach((profile) => {
+      const key = `${profile.instituteId}-student`;
+      const existing = requestMap.get(key);
+
+      // If no request exists OR the existing one is not approved, use the profile data
+      if (!existing || existing.status !== "approved") {
+        requestMap.set(key, {
+          id: `virtual-student-${profile.id}`,
+          userId,
+          instituteId: profile.instituteId,
+          role: "student",
+          status: "approved",
+          message: "Enrolled by Administrator",
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt,
+          institute: profile.institute,
+        });
+      }
+    });
+
+    // Add teacher memberships as "approved" virtual requests
+    teacherProfiles.forEach((profile) => {
+      const key = `${profile.instituteId}-teacher`;
+      const existing = requestMap.get(key);
+
+      // If no request exists OR the existing one is not approved, use the profile data
+      if (!existing || existing.status !== "approved") {
+        requestMap.set(key, {
+          id: `virtual-teacher-${profile.id}`,
+          userId,
+          instituteId: profile.instituteId,
+          role: "teacher",
+          status: "approved",
+          message: "Appointed by Administrator",
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt,
+          institute: profile.institute,
+        });
+      }
+    });
+
+    // Add owned institutes as "approved" virtual requests with "admin" role
+    ownedInstitutes.forEach((inst) => {
+      const key = `${inst.id}-admin`;
+      const existing = requestMap.get(key);
+
+      if (!existing || existing.status !== "approved") {
+        requestMap.set(key, {
+          id: `virtual-owner-${inst.id}`,
+          userId,
+          instituteId: inst.id,
+          role: "admin", // Special role for owners
+          status: "approved",
+          message: "Institute Owner",
+          createdAt: inst.createdAt,
+          updatedAt: inst.updatedAt,
+          institute: {
+            id: inst.id,
+            instituteName: inst.instituteName,
+            subdomain: inst.subdomain,
+            logo: inst.logo,
+            address: inst.address,
+            type: inst.type,
+          },
+        });
+      }
+    });
+
+    // Return all sorted by date
+    return Array.from(requestMap.values()).sort((a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   async getInstituteRequests(instituteId: string, userId: string) {

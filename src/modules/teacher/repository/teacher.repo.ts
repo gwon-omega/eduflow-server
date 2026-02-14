@@ -24,10 +24,20 @@ export class TeacherRepo extends BaseRepository<Teacher> {
 
   async findByUserId(userId: string): Promise<Teacher | null> {
     return this.model.findFirst({
-      where: { userId },
+      where: { userId, deletedAt: null },
       include: {
         institute: true,
       },
+    });
+  }
+
+  async findAllByUserId(userId: string) {
+    return this.model.findMany({
+      where: { userId, deletedAt: null },
+      include: {
+        institute: true,
+      },
+      orderBy: { joinedDate: "desc" },
     });
   }
 

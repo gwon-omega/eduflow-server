@@ -12,7 +12,26 @@ export class StudentRepo extends TenantRepository<Student> {
     // We use findFirst to get the most recent or primary entry
     return this.model.findFirst({
       where: { userId, deletedAt: null },
-      orderBy: { enrolledDate: 'desc' }
+      orderBy: { enrolledDate: "desc" },
+    });
+  }
+
+  async findAllByUserId(userId: string) {
+    return this.model.findMany({
+      where: { userId, deletedAt: null },
+      include: {
+        institute: {
+          select: {
+            id: true,
+            instituteName: true,
+            subdomain: true,
+            logo: true,
+            address: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: { enrolledDate: "desc" },
     });
   }
 
