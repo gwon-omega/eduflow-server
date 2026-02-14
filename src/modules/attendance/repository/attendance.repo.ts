@@ -1,8 +1,8 @@
-import { BaseRepository } from "@core/repository/BaseRepository";
+import { TenantRepository } from "@core/repository/TenantRepository";
 import { Attendance } from "@prisma/client";
 import prisma from "../../../core/database/prisma";
 
-export class AttendanceRepo extends BaseRepository<Attendance> {
+export class AttendanceRepo extends TenantRepository<Attendance> {
   constructor() {
     super("attendance");
   }
@@ -16,7 +16,7 @@ export class AttendanceRepo extends BaseRepository<Attendance> {
     markedBy: string;
     remarks?: string;
   }) {
-    return this.model.upsert({
+    return this.upsertByTenant({
       where: {
         studentId_courseId_date: {
           studentId: data.studentId,
@@ -30,6 +30,10 @@ export class AttendanceRepo extends BaseRepository<Attendance> {
         markedBy: data.markedBy,
       },
       create: data,
+      instituteId: data.instituteId,
+      include: {
+        course: true,
+      }
     });
   }
 
@@ -41,7 +45,7 @@ export class AttendanceRepo extends BaseRepository<Attendance> {
     endDate?: Date;
   }) {
     const { studentId, courseId, instituteId, startDate, endDate } = filters;
-    const where: any = { instituteId };
+    const where: any = {};
 
     if (studentId) where.studentId = studentId;
     if (courseId) where.courseId = courseId;
@@ -51,7 +55,8 @@ export class AttendanceRepo extends BaseRepository<Attendance> {
       if (endDate) where.date.lte = endDate;
     }
 
-    return this.model.findMany({
+    return this.findManyByTenant({
+      instituteId,
       where,
       include: {
         student: { select: { firstName: true, lastName: true } },

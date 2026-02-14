@@ -6,11 +6,17 @@ export const markAsRead = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     const { ids } = req.body;
-    if (!userId) throw new Error("User ID not found");
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: "Notification IDs array required" });
+    }
 
     const result = await notificationService.markAsRead(userId, ids);
-    res.json({ status: "success", data: result });
+    res.json({ success: true, data: result });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to mark notifications as read" });
   }
 };

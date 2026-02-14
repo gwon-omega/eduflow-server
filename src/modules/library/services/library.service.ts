@@ -3,8 +3,8 @@ import prisma from "../../../core/database/prisma";
 import firebaseStorage from "../../../core/services/firebaseStorage";
 
 export class LibraryService {
-  async getBooks(instituteId: string, filters: any) {
-    return libraryRepo.findByInstitute(instituteId, { ...filters, type: "book" });
+  async getResources(instituteId: string, filters: any) {
+    return libraryRepo.findByInstitute(instituteId, filters);
   }
 
   async getResourceById(id: string, instituteId: string) {
@@ -56,7 +56,13 @@ export class LibraryService {
     return libraryRepo.deleteMany({ where: { id, instituteId } });
   }
 
-  async borrowResource(resourceId: string, studentId: string, instituteId: string, dueDate: Date) {
+  async borrowResource(userId: string, instituteId: string, resourceId: string, dueDate: Date) {
+    const student = await (prisma.student as any).findFirst({
+       where: { userId }
+    });
+    if (!student) throw new Error("Student profile not found");
+    const studentId = student.id;
+
     return prisma.$transaction(async (tx: any) => {
       const resource = await tx.libraryResource.findFirst({
         where: { id: resourceId, instituteId },

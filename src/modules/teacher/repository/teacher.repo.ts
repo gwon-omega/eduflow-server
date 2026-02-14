@@ -76,11 +76,30 @@ export class TeacherRepo extends BaseRepository<Teacher> {
       }
     });
 
+    // Count classes scheduled for today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const classesToday = await prisma.scheduleEvent.count({
+      where: {
+        OR: [
+          { teacherId },
+          { courseId: { in: courseIds } }
+        ],
+        startTime: {
+          gte: startOfToday,
+          lte: endOfToday
+        }
+      }
+    });
+
     return {
       activeCourses,
       totalStudents,
       pendingGrading,
-      classesToday: 0 // Placeholder
+      classesToday
     };
   }
 
@@ -144,6 +163,11 @@ export class TeacherRepo extends BaseRepository<Teacher> {
           { teacherId },
           { courseId: { in: courseIds } }
         ]
+      },
+      include: {
+        _count: {
+          select: { attendees: true }
+        }
       },
       orderBy: { startTime: 'asc' }
     });

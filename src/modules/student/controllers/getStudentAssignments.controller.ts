@@ -9,9 +9,13 @@ export const getStudentAssignments = async (
 ) => {
   try {
     const { id } = req.user!;
+    if (!id) {
+       return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+
     const student = await studentRepo.findByUserId(id);
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ success: false, message: "Student profile not found" });
     }
 
     const assignments = await studentRepo.getAssignments(student.id);
@@ -32,8 +36,8 @@ export const getStudentAssignments = async (
       };
     });
 
-    res.json(formatted);
-  } catch (error) {
-    next(error);
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch student assignments" });
   }
 };

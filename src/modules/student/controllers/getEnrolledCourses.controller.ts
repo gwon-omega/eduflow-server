@@ -5,12 +5,14 @@ import studentRepo from "../repository/student.repo";
 export const getEnrolledCourses = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const instituteId = req.instituteId;
-
-    if (!userId) throw new Error("User ID not found");
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     const student = await studentRepo.findByUserId(userId);
-    if (!student) throw new Error("Student profile not found");
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student profile not found" });
+    }
 
     const courses = await studentRepo.getEnrolledCourses(student.id);
 
@@ -26,8 +28,8 @@ export const getEnrolledCourses = async (req: IExtendedRequest, res: Response) =
       thumbnail: sc.course.thumbnail,
     }));
 
-    res.json({ status: "success", data: formattedCourses });
+    res.json({ success: true, data: formattedCourses });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch enrolled courses" });
   }
 };

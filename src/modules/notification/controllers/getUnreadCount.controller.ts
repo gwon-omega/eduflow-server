@@ -5,11 +5,13 @@ import notificationService from "../services/notification.service";
 export const getUnreadCount = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    if (!userId) throw new Error("User ID not found");
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     const count = await notificationService.getUnreadCount(userId);
-    res.json({ status: "success", data: { count } });
+    res.json({ success: true, data: { count } });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch unread count" });
   }
 };

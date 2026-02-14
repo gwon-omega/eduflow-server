@@ -5,11 +5,13 @@ import notificationService from "../services/notification.service";
 export const getNotifications = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    if (!userId) throw new Error("User ID not found");
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     const notifications = await notificationService.getUserNotifications(userId, req.query);
-    res.json({ status: "success", data: notifications });
+    res.json({ success: true, data: notifications });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch notifications" });
   }
 };

@@ -1,8 +1,9 @@
 import { Response } from "express";
 import { IExtendedRequest } from "../../../core/middleware/type";
 import studentRepo from "../repository/student.repo";
+import prisma from "../../../core/database/prisma";
 
-export const getStudentStats = async (req: IExtendedRequest, res: Response) => {
+export const getStudentCourseProgress = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -14,10 +15,15 @@ export const getStudentStats = async (req: IExtendedRequest, res: Response) => {
       return res.status(404).json({ success: false, message: "Student profile not found" });
     }
 
-    const stats = await studentRepo.getStudentStats(student.id);
+    const progress = await (prisma.studentProgress as any).findMany({
+      where: { studentId: student.id },
+      include: {
+          course: { select: { name: true, thumbnail: true } }
+      }
+    });
 
-    res.json({ success: true, data: stats });
+    res.json({ success: true, data: progress });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || "Failed to fetch student statistics" });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch course progress" });
   }
 };

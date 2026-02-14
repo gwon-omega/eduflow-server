@@ -6,11 +6,13 @@ export const createResource = async (req: IExtendedRequest, res: Response) => {
   try {
     const instituteId = req.instituteId;
     const userId = req.user?.id;
-    if (!instituteId || !userId) throw new Error("Unauthorized or context missing");
+    if (!instituteId || !userId) {
+      return res.status(401).json({ success: false, message: "Authentication required or institute context missing" });
+    }
 
     const resource = await libraryService.createResource(instituteId, userId, req.body, req.file);
-    res.status(201).json({ status: "success", data: resource });
+    res.status(201).json({ success: true, data: resource });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(400).json({ success: false, message: error.message || "Failed to create library resource" });
   }
 };

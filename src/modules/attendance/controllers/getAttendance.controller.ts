@@ -7,7 +7,9 @@ export const getAttendance = async (req: IExtendedRequest, res: Response) => {
     const { studentId, courseId, startDate, endDate } = req.query;
     const instituteId = req.instituteId;
 
-    if (!instituteId) throw new Error("Institute not found");
+    if (!instituteId) {
+      return res.status(401).json({ success: false, message: "Institute context required" });
+    }
 
     const attendance = await attendanceService.getAttendance({
       studentId: studentId as string,
@@ -17,8 +19,8 @@ export const getAttendance = async (req: IExtendedRequest, res: Response) => {
       endDate: endDate ? new Date(endDate as string) : undefined,
     });
 
-    res.json({ status: "success", data: attendance });
+    res.json({ success: true, data: attendance });
   } catch (error: any) {
-    res.status(400).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch attendance data" });
   }
 };

@@ -5,11 +5,16 @@ import studentService from "../services/student.service";
 export const getProfile = async (req: IExtendedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     const profile = await studentService.getStudentProfile(userId);
-    res.json({ status: "success", data: profile });
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Student profile not found" });
+    }
+    res.json({ success: true, data: profile });
   } catch (error: any) {
-    res.status(404).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch student profile" });
   }
 };

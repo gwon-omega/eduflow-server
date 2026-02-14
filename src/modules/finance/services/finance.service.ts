@@ -1,5 +1,6 @@
 import financeRepo from "../repository/finance.repo";
 import prisma from "../../../core/database/prisma";
+import crypto from "crypto";
 
 export class FinanceService {
   async getFeeStructures(instituteId: string) {
@@ -14,17 +15,25 @@ export class FinanceService {
   }
 
   async recordPayment(instituteId: string, data: any) {
-    const { studentId, feeStructureId, amountPaid, paymentDate, paymentMethod, remarks } = data;
+    const { studentId, feeStructureId, amountPaid, paymentDate, paymentMethod, remarks, idempotencyKey } = data;
 
     return prisma.$transaction(async (tx) => {
-      // 1. Get structure
+      // 1. Idempotency Check
+      if (idempotencyKey) {
+        const existingPayment = await (tx as any).feePayment.findUnique({
+          where: { idempotencyKey }
+        });
+        if (existingPayment) return existingPayment;
+      }
+
+      // 2. Get structure
       const structure = await tx.feeStructure.findUnique({
         where: { id: feeStructureId }
       });
 
       if (!structure) throw new Error("Fee structure not found");
 
-      // 2. Calculate balance
+      // 3. Calculate balance
       const previousPayments = await tx.feePayment.aggregate({
         where: { studentId, feeStructureId },
         _sum: { amountPaid: true }
@@ -35,10 +44,11 @@ export class FinanceService {
       const newBalance = totalAmount - (totalPaidSoFar + Number(amountPaid));
       const status = newBalance <= 0 ? "paid" : "partial";
 
-      const receiptNumber = `RCP-${Date.now().toString().slice(-6)}`;
+      // 4. Generate high-entropy receipt number
+      const receiptNumber = `RCP-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
-      // 3. Create payment
-      return tx.feePayment.create({
+      // 5. Create payment
+      return (tx as any).feePayment.create({
         data: {
           instituteId,
           studentId,
@@ -49,6 +59,7 @@ export class FinanceService {
           paymentMethod: paymentMethod || "cash",
           status,
           receiptNumber,
+          idempotencyKey,
           remarks,
         }
       });

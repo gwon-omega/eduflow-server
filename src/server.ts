@@ -17,12 +17,23 @@ if (process.env.SENTRY_DSN && process.env.SENTRY_DSN !== "your-sentry-dsn") {
   console.log("✅ Sentry error tracking initialized");
 }
 
+import { createServer } from "http";
+import socketService from "./core/services/socket.service";
+import supportTasksService from "./modules/support/services/support-tasks.service";
 import app from "./app";
 
 // Start server
 const PORT = validatedEnv.PORT || 4000;
 
-const server = app.listen(PORT, () => {
+const httpServer = createServer(app);
+
+// Initialize Socket.IO
+socketService.init(httpServer);
+
+// Initialize Support Background Tasks
+supportTasksService.init();
+
+const server = httpServer.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);

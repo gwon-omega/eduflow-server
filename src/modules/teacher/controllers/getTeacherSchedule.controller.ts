@@ -25,7 +25,7 @@ export const getTeacherSchedule = async (
       duration: (new Date(e.endTime).getTime() - new Date(e.startTime).getTime()) / (1000 * 60 * 60), // hours
       room: e.location || "Online",
       type: e.type || "lecture",
-      students: 0 // Placeholder count
+      students: e._count?.attendees || 0
     }));
 
     res.json(formattedEvents);

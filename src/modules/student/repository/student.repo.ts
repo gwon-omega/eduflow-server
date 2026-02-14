@@ -1,8 +1,8 @@
-import { BaseRepository } from "@core/repository/BaseRepository";
+import { TenantRepository } from "@core/repository/TenantRepository";
 import { Student } from "@prisma/client";
 import prisma from "../../../core/database/prisma";
 
-export class StudentRepo extends BaseRepository<Student> {
+export class StudentRepo extends TenantRepository<Student> {
   constructor() {
     super("student");
   }
@@ -46,13 +46,42 @@ export class StudentRepo extends BaseRepository<Student> {
     });
   }
 
-  async getStudentStats(studentId: string) {
+  async getStudentStats(studentId: string, terminalId?: string) {
     const enrolledCourses = await prisma.studentCourse.count({
       where: { studentId }
     });
 
-    // For learning hours, GPA, etc., we'd need more logic/tables.
-    // Simplifying for now with counts.
+    // Calculate GPA from assessment results
+    const results = await prisma.assessmentResult.findMany({
+      where: {
+        studentId,
+        ...(terminalId ? { assessment: { terminalId } } : {})
+      } as any,
+      include: {
+        assessment: true
+      }
+    });
+
+    let gpa = 0;
+    if (results.length > 0) {
+      const totalPoints = results.reduce((acc, curr: any) => {
+        const percentage = (curr.marks / curr.assessment.maxMarks) * 100;
+        // Simple 4.0 scale conversion: percentage / 25
+        return acc + (percentage / 25);
+      }, 0);
+      gpa = parseFloat((totalPoints / results.length).toFixed(2));
+    }
+
+    // Aggregate learning hours from progress tracking
+    const progress = await prisma.studentProgress.aggregate({
+      where: { studentId },
+      _sum: {
+        timeSpent: true
+      }
+    });
+    // duration is in seconds now based on schema (updated to timeSpent)
+    const learningHours = Math.round((progress._sum.timeSpent || 0) / 3600);
+
     const pendingAssignments = await prisma.assignmentSubmission.count({
       where: {
         studentId,
@@ -60,12 +89,34 @@ export class StudentRepo extends BaseRepository<Student> {
       }
     });
 
+    // Assignments due within next 48 hours
+    const fortyEightHoursFromNow = new Date();
+    fortyEightHoursFromNow.setHours(fortyEightHoursFromNow.getHours() + 48);
+
+    const urgentAssignments = await prisma.assignment.count({
+      where: {
+        course: {
+          students: {
+            some: { studentId }
+          }
+        },
+        dueDate: {
+          gt: new Date(),
+          lte: fortyEightHoursFromNow
+        },
+        submissions: {
+          none: { studentId }
+        },
+        deletedAt: null
+      }
+    });
+
     return {
       enrolledCourses,
-      learningHours: 0, // Placeholder
-      gpa: 0, // Placeholder
+      learningHours,
+      gpa,
       pendingAssignments,
-      urgentAssignments: 0 // Placeholder
+      urgentAssignments
     };
   }
 

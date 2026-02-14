@@ -31,7 +31,11 @@ export const requestJoinInstitute = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Authentication required. Please log in." });
+    }
+
+    if (!role) {
+      return res.status(400).json({ success: false, message: "Role (student/teacher) is required" });
     }
 
     const request = await joinRequestService.createJoinRequest(
@@ -42,12 +46,19 @@ export const requestJoinInstitute = async (req: Request, res: Response) => {
     );
 
     res.status(201).json({
+      success: true,
       message: "Join request submitted successfully",
-      request,
+      data: request,
     });
   } catch (error: any) {
     console.error("Error creating join request:", error);
-    res.status(400).json({ message: error.message || "Failed to submit request" });
+
+    // Custom check for duplicate requests if not handled inside service
+    if (error.message?.includes("already submitted")) {
+      return res.status(409).json({ success: false, message: error.message });
+    }
+
+    res.status(400).json({ success: false, message: error.message || "Failed to submit join request" });
   }
 };
 
@@ -57,14 +68,14 @@ export const getMyJoinRequests = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const requests = await joinRequestService.getUserRequests(userId);
-    res.json({ requests });
+    res.json({ success: true, data: requests });
   } catch (error: any) {
     console.error("Error fetching join requests:", error);
-    res.status(500).json({ message: "Failed to fetch requests" });
+    res.status(500).json({ success: false, message: "Failed to fetch requests" });
   }
 };
 
@@ -75,17 +86,17 @@ export const getInstituteJoinRequests = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const requests = await joinRequestService.getInstituteRequests(
       instituteId,
       userId
     );
-    res.json({ requests });
+    res.json({ success: true, data: requests });
   } catch (error: any) {
     console.error("Error fetching institute requests:", error);
-    res.status(403).json({ message: error.message || "Failed to fetch requests" });
+    res.status(403).json({ success: false, message: error.message || "Access denied" });
   }
 };
 
@@ -97,11 +108,11 @@ export const reviewJoinRequest = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Status must be 'approved' or 'rejected'" });
+    if (!["approved", "rejected", "banned"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status update" });
     }
 
     const updated = await joinRequestService.reviewRequest(
@@ -111,11 +122,12 @@ export const reviewJoinRequest = async (req: Request, res: Response) => {
     );
 
     res.json({
+      success: true,
       message: `Request ${status} successfully`,
-      request: updated,
+      data: updated,
     });
   } catch (error: any) {
     console.error("Error reviewing request:", error);
-    res.status(400).json({ message: error.message || "Failed to review request" });
+    res.status(400).json({ success: false, message: error.message || "Failed to review request" });
   }
 };

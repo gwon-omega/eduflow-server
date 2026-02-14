@@ -1,15 +1,15 @@
-import { BaseRepository } from "@core/repository/BaseRepository";
+import { TenantRepository } from "@core/repository/TenantRepository";
 import { Assessment, AssessmentResult } from "@prisma/client";
 import prisma from "../../../core/database/prisma";
 
-export class AcademicRepo extends BaseRepository<Assessment> {
+export class AcademicRepo extends TenantRepository<Assessment> {
   constructor() {
     super("assessment");
   }
 
   async getAssessments(courseId: string) {
     return this.model.findMany({
-      where: { courseId },
+      where: { courseId, deletedAt: null },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -38,16 +38,31 @@ export class AcademicRepo extends BaseRepository<Assessment> {
     });
   }
 
+  async getRecentResults(instituteId: string, limit: number = 10) {
+    return (prisma as any).assessmentResult.findMany({
+      where: {
+        assessment: { instituteId }
+      },
+      include: {
+        student: {
+          select: { firstName: true, lastName: true }
+        },
+        assessment: {
+          select: { title: true }
+        }
+      },
+      orderBy: { submittedAt: 'desc' },
+      take: limit
+    });
+  }
+
   async getResultsByStudentTerminal(studentId: string, terminalId: string) {
-    // Note: 'terminalId' is currently treated as a placeholder for filtering a set of assessments.
-    // In a future update, we will add a 'Terminal' model to the schema.
     return (prisma as any).assessmentResult.findMany({
       where: {
         studentId,
+        assessment: { terminalId }
       },
-      include: {
-        assessment: true,
-      },
+      include: { assessment: true },
     }).then((results: any[]) =>
       results.map((r) => ({
         ...r,

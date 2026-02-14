@@ -5,11 +5,13 @@ import libraryService from "../services/library.service";
 export const getResources = async (req: IExtendedRequest, res: Response) => {
   try {
     const instituteId = req.instituteId;
-    if (!instituteId) throw new Error("Institute context required");
+    if (!instituteId) {
+       return res.status(401).json({ success: false, message: "Institute context required" });
+    }
 
-    const resources = await libraryService.getBooks(instituteId, req.query);
-    res.json({ status: "success", data: resources });
+    const resources = await libraryService.getResources(instituteId, req.query);
+    res.json({ success: true, data: resources });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch library resources" });
   }
 };

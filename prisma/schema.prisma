@@ -256,6 +256,7 @@ model Institute {
   assessments       Assessment[]
   libraryCategories LibraryCategory[]
   libraryResources  LibraryResource[]
+  studentCourses    StudentCourse[]
 
   // New features
   scheduleEvents  ScheduleEvent[]
@@ -330,6 +331,7 @@ model FeePayment {
   paymentMethod  String   @default("cash") @map("payment_method")
   status         String // paid, partial, pending
   receiptNumber  String   @unique @map("receipt_number")
+  idempotencyKey String?  @unique @map("idempotency_key")
   remarks        String?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -389,13 +391,15 @@ model Course {
   assessments Assessment[]
   students    StudentCourse[]
   teachers    TeacherCourse[]
+  progress    StudentProgress[]
 
   @@index([instituteId])
   @@index([categoryId])
   @@index([curriculumId])
   @@index([isPublished])
   @@index([createdAt])
-  @@index([instituteId, isPublished])
+  @@index([deletedAt])
+  @@index([instituteId, isPublished, deletedAt])
   @@map("courses")
 }
 
@@ -448,6 +452,8 @@ model Student {
   @@index([instituteId])
   @@index([userId])
   @@index([email])
+  @@index([deletedAt])
+  @@index([instituteId, deletedAt])
   @@map("students")
 }
 
@@ -475,6 +481,8 @@ model Teacher {
   @@index([instituteId])
   @@index([userId])
   @@index([email])
+  @@index([deletedAt])
+  @@index([instituteId, deletedAt])
   @@map("teachers")
 }
 
@@ -556,6 +564,7 @@ model Assessment {
   passingMarks Int       @map("passing_marks")
   scheduledAt  DateTime? @map("scheduled_at")
   duration     Int? // minutes
+  terminalId   String?   @map("terminal_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
@@ -565,6 +574,7 @@ model Assessment {
 
   @@index([instituteId])
   @@index([courseId])
+  @@index([terminalId])
   @@map("assessments")
 }
 
@@ -572,10 +582,11 @@ model AssessmentResult {
   id           String    @id @default(uuid()) @db.Uuid
   assessmentId String    @map("assessment_id") @db.Uuid
   studentId    String    @map("student_id") @db.Uuid
-  marks        Int
-  remarks      String?
-  submittedAt  DateTime? @map("submitted_at")
-  gradedBy     String?   @map("graded_by") @db.Uuid // Teacher user_id
+  marks            Int
+  remarks          String?
+  submittedAt      DateTime? @map("submitted_at")
+  gradedBy         String?   @map("graded_by") @db.Uuid // Teacher user_id
+  verificationHash String?   @map("verification_hash")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
@@ -589,16 +600,19 @@ model AssessmentResult {
 
 // Junction tables
 model StudentCourse {
-  id         String   @id @default(uuid()) @db.Uuid
-  studentId  String   @map("student_id") @db.Uuid
-  courseId   String   @map("course_id") @db.Uuid
-  enrolledAt DateTime @default(now()) @map("enrolled_at")
+  id          String   @id @default(uuid()) @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  courseId    String   @map("course_id") @db.Uuid
+  instituteId String   @map("institute_id") @db.Uuid
+  enrolledAt  DateTime @default(now()) @map("enrolled_at")
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
   @@index([courseId])
+  @@index([instituteId])
   @@map("student_courses")
 }
 
@@ -1248,6 +1262,7 @@ model StudentProgress {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId, lessonId])
   @@index([studentId])

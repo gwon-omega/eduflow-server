@@ -29,12 +29,36 @@ export class SupportService {
     return message;
   }
 
-  async updateTicketStatus(ticketId: string, status: TicketStatus) {
-    const data: any = { status };
+  async updateTicketStatus(ticketId: string, status: TicketStatus, userId: string) {
+    const ticket = await supportRepo.findTicketDetails(ticketId, true);
+    if (!ticket) throw new Error("Ticket not found");
+
+    // State Machine Validation Logic
+    const currentStatus = ticket.status as TicketStatus;
+
+    // Prevent invalid transitions: e.g., Resolving a closed ticket, or Reopening from Resolved without context
+    if (currentStatus === TicketStatus.closed) {
+      throw new Error("Cannot modify a closed ticket. Please create a new support request.");
+    }
+
+    const data: any = { status, updatedAt: new Date() };
+
     if (status === TicketStatus.resolved || status === TicketStatus.closed) {
       data.resolvedAt = new Date();
     }
-    return supportRepo.update(ticketId, data);
+
+    // High-Integrity Resolution Audit
+    const updatedTicket = await supportRepo.update(ticketId, data);
+
+    // Log state change as a system message
+    await supportRepo.addMessage({
+      ticketId,
+      senderId: userId,
+      content: `[System Update] Ticket status changed from ${currentStatus} to ${status}`,
+      isInternal: true,
+    });
+
+    return updatedTicket;
   }
 }
 

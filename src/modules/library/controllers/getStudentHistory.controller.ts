@@ -6,11 +6,13 @@ export const getStudentHistory = async (req: IExtendedRequest, res: Response) =>
   try {
     const { studentId } = req.params;
     const instituteId = req.instituteId;
-    if (!instituteId) throw new Error("Institute context required");
+    if (!instituteId) {
+       return res.status(401).json({ success: false, message: "Institute context required" });
+    }
 
     const history = await libraryService.getStudentHistory(studentId, instituteId);
-    res.json({ status: "success", data: history });
+    res.json({ success: true, data: history });
   } catch (error: any) {
-    res.status(500).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch student library history" });
   }
 };

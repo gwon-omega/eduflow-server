@@ -6,11 +6,16 @@ export const getResourceById = async (req: IExtendedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const instituteId = req.instituteId;
-    if (!instituteId) throw new Error("Institute context required");
+    if (!instituteId) {
+      return res.status(401).json({ success: false, message: "Institute context required" });
+    }
 
     const resource = await libraryService.getResourceById(id, instituteId);
-    res.json({ status: "success", data: resource });
+    if (!resource) {
+       return res.status(404).json({ success: false, message: "Resource not found" });
+    }
+    res.json({ success: true, data: resource });
   } catch (error: any) {
-    res.status(404).json({ status: "error", message: error.message });
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch resource details" });
   }
 };

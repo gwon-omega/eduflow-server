@@ -1,8 +1,8 @@
-import { BaseRepository } from "@core/repository/BaseRepository";
+import { TenantRepository } from "@core/repository/TenantRepository";
 import { LibraryResource, LibraryBorrow } from "@prisma/client";
 import prisma from "../../../core/database/prisma";
 
-export class LibraryRepo extends BaseRepository<LibraryResource> {
+export class LibraryRepo extends TenantRepository<LibraryResource> {
   constructor() {
     super("libraryResource");
   }
@@ -11,8 +11,8 @@ export class LibraryRepo extends BaseRepository<LibraryResource> {
     const { search, categoryId, status, type } = filters;
 
     const where: any = {
-      instituteId,
-      deletedAt: null,
+      // instituteId and deletedAt are handled if we use findManyByTenant,
+      // but here we have custom logic for search, so we'll pass to findManyByTenant
     };
 
     if (search) {
@@ -35,7 +35,9 @@ export class LibraryRepo extends BaseRepository<LibraryResource> {
       where.type = type;
     }
 
-    return this.model.findMany({
+    // Leveraging enforced tenant isolation
+    return this.findManyByTenant({
+      instituteId,
       where,
       include: {
         category: true,

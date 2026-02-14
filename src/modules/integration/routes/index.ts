@@ -13,6 +13,8 @@ router.get("/google-sheets/callback", googleSheetsCallback); // Public callback 
 
 // Status
 router.get("/google-sheets/status", authenticate, getIntegrationStatus);
+router.post("/google-sheets/sync", authenticate, syncDataToSheet);
+
 // Google Meet
 router.get("/google-meet/connect", authenticate, connectGoogleMeet);
 router.get("/google-meet/callback", googleMeetCallback);

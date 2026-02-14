@@ -111,8 +111,7 @@ class JoinRequestService {
 
     // Notify Institute Owner
     if (institute.ownerId) {
-      await notificationService.createNotification({
-        userId: institute.ownerId,
+      await notificationService.notifyInstitute(instituteId, {
         type: NotificationType.info,
         title: "New Join Request",
         message: `A new request to join as a ${role} has been submitted by a user.`,
@@ -226,6 +225,7 @@ class JoinRequestService {
         type = NotificationType.alert;
       }
 
+      // Using notifyUser with user context
       await notificationService.createNotification({
         userId: request.userId,
         type,

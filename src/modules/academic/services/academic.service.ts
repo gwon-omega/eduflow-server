@@ -1,5 +1,8 @@
 import academicRepo from "../repository/academic.repo";
 import { getGradeFromPercentage, calculateGPA } from "../utils/grading.utils";
+import prisma from "../../../core/database/prisma";
+import pushService from "../../notification/services/push.service";
+import academicIntegrityService from "./academic-integrity.service";
 
 export class AcademicService {
   async createAssessment(data: any) {
@@ -11,7 +14,33 @@ export class AcademicService {
   }
 
   async submitResult(data: any) {
-    return academicRepo.submitResult(data);
+    // Generate cryptographic verification hash to prevent tampering
+    const verificationHash = academicIntegrityService.generateResultHash(
+      data.studentId,
+      data.assessmentId,
+      data.marks
+    );
+
+    const result = await academicRepo.submitResult({
+      ...data,
+      verificationHash
+    });
+
+    // Fetch student user ID for notification
+    const student = await prisma.student.findUnique({
+      where: { id: data.studentId },
+      include: { user: true }
+    });
+
+    if (student?.userId) {
+      await pushService.sendNotification(student.userId, {
+        title: "New Grade Posted",
+        body: `Your result for the assessment has been posted. Grade/Marks: ${data.marks}`,
+        data: { type: "academic", assessmentId: data.assessmentId }
+      });
+    }
+
+    return result;
   }
 
   async getResults(assessmentId: string) {

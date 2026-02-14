@@ -5,12 +5,18 @@ import libraryService from "../services/library.service";
 export const returnResource = async (req: IExtendedRequest, res: Response) => {
   try {
     const instituteId = req.instituteId;
-    if (!instituteId) throw new Error("Institute context required");
+    if (!instituteId) {
+       return res.status(401).json({ success: false, message: "Institute context required" });
+    }
 
     const { borrowId } = req.body;
+    if (!borrowId) {
+       return res.status(400).json({ success: false, message: "Borrow record ID required" });
+    }
+
     await libraryService.returnResource(borrowId, instituteId);
-    res.json({ status: "success", message: "Resource returned successfully" });
+    res.json({ success: true, message: "Resource returned successfully" });
   } catch (error: any) {
-    res.status(400).json({ status: "error", message: error.message });
+    res.status(400).json({ success: false, message: error.message || "Failed to return resource" });
   }
 };
