@@ -149,7 +149,7 @@ class JoinRequestService {
     });
 
     // Add student memberships as "approved" virtual requests
-    studentProfiles.forEach((profile) => {
+    studentProfiles.forEach((profile: any) => {
       const key = `${profile.instituteId}-student`;
       const existing = requestMap.get(key);
 
@@ -170,7 +170,7 @@ class JoinRequestService {
     });
 
     // Add teacher memberships as "approved" virtual requests
-    teacherProfiles.forEach((profile) => {
+    teacherProfiles.forEach((profile: any) => {
       const key = `${profile.instituteId}-teacher`;
       const existing = requestMap.get(key);
 
@@ -191,7 +191,7 @@ class JoinRequestService {
     });
 
     // Add owned institutes as "approved" virtual requests with "admin" role
-    ownedInstitutes.forEach((inst) => {
+    ownedInstitutes.forEach((inst: any) => {
       const key = `${inst.id}-admin`;
       const existing = requestMap.get(key);
 
