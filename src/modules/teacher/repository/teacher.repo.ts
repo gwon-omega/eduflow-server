@@ -41,6 +41,16 @@ export class TeacherRepo extends BaseRepository<Teacher> {
     });
   }
 
+  async findAllByEmail(email: string) {
+    return this.model.findMany({
+      where: { email, deletedAt: null },
+      include: {
+        institute: true,
+      },
+      orderBy: { joinedDate: "desc" },
+    });
+  }
+
   async getAssignedCourses(teacherId: string) {
     return prisma.teacherCourse.findMany({
       where: { teacherId },

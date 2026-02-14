@@ -35,6 +35,25 @@ export class StudentRepo extends TenantRepository<Student> {
     });
   }
 
+  async findAllByEmail(email: string) {
+    return this.model.findMany({
+      where: { email, deletedAt: null },
+      include: {
+        institute: {
+          select: {
+            id: true,
+            instituteName: true,
+            subdomain: true,
+            logo: true,
+            address: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: { enrolledDate: "desc" },
+    });
+  }
+
   async findWithProfile(id: string) {
     return this.model.findUnique({
       where: { id },

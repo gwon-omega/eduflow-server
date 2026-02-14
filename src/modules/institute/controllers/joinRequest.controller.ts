@@ -48,7 +48,7 @@ export const requestJoinInstitute = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       message: "Join request submitted successfully",
-      data: request,
+      request,
     });
   } catch (error: any) {
     console.error("Error creating join request:", error);
@@ -72,7 +72,7 @@ export const getMyJoinRequests = async (req: Request, res: Response) => {
     }
 
     const requests = await joinRequestService.getUserRequests(userId);
-    res.json({ success: true, data: requests });
+    res.json({ success: true, requests });
   } catch (error: any) {
     console.error("Error fetching join requests:", error);
     res.status(500).json({ success: false, message: "Failed to fetch requests" });

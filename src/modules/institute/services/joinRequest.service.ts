@@ -127,14 +127,27 @@ class JoinRequestService {
   }
 
   async getUserRequests(userId: string) {
+    // 0. Fetch user email for broad discovery
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    const userEmail = user?.email;
+
     // 1. Fetch real join requests
     const realRequests = await joinRequestRepo.findByUserId(userId);
 
-    // 2. Fetch direct student memberships
-    const studentProfiles = (await studentRepo.findAllByUserId(userId)) as any[];
+    // 2. Fetch direct student memberships (by userId AND email)
+    const studentProfilesById = (await studentRepo.findAllByUserId(userId)) as any[];
+    const studentProfilesByEmail = userEmail
+      ? ((await studentRepo.findAllByEmail(userEmail)) as any[])
+      : [];
 
-    // 3. Fetch direct teacher memberships
-    const teacherProfiles = (await teacherRepo.findAllByUserId(userId)) as any[];
+    // 3. Fetch direct teacher memberships (by userId AND email)
+    const teacherProfilesById = (await teacherRepo.findAllByUserId(userId)) as any[];
+    const teacherProfilesByEmail = userEmail
+      ? ((await teacherRepo.findAllByEmail(userEmail)) as any[])
+      : [];
 
     // 4. Fetch owned institutes
     const ownedInstitutes = (await instituteRepo.findByOwner(userId)) as any[];
@@ -143,52 +156,37 @@ class JoinRequestService {
     // Key: instituteId + role
     const requestMap = new Map();
 
-    // Add real requests first (they have the most detail like messages/status)
-    realRequests.forEach(req => {
+    // Add real requests first
+    realRequests.forEach((req) => {
       requestMap.set(`${req.instituteId}-${req.role}`, req);
     });
 
-    // Add student memberships as "approved" virtual requests
-    studentProfiles.forEach((profile: any) => {
-      const key = `${profile.instituteId}-student`;
-      const existing = requestMap.get(key);
+    // Helper to merge profiles (prioritizing existing data)
+    const mergeProfiles = (profiles: any[], role: string, message: string) => {
+      profiles.forEach((profile) => {
+        const key = `${profile.instituteId}-${role}`;
+        const existing = requestMap.get(key);
 
-      // If no request exists OR the existing one is not approved, use the profile data
-      if (!existing || existing.status !== "approved") {
-        requestMap.set(key, {
-          id: `virtual-student-${profile.id}`,
-          userId,
-          instituteId: profile.instituteId,
-          role: "student",
-          status: "approved",
-          message: "Enrolled by Administrator",
-          createdAt: profile.createdAt,
-          updatedAt: profile.updatedAt,
-          institute: profile.institute,
-        });
-      }
-    });
+        if (!existing || existing.status !== "approved") {
+          requestMap.set(key, {
+            id: `virtual-${role}-${profile.id}`,
+            userId,
+            instituteId: profile.instituteId,
+            role,
+            status: "approved",
+            message,
+            createdAt: profile.createdAt,
+            updatedAt: profile.updatedAt,
+            institute: profile.institute,
+          });
+        }
+      });
+    };
 
-    // Add teacher memberships as "approved" virtual requests
-    teacherProfiles.forEach((profile: any) => {
-      const key = `${profile.instituteId}-teacher`;
-      const existing = requestMap.get(key);
-
-      // If no request exists OR the existing one is not approved, use the profile data
-      if (!existing || existing.status !== "approved") {
-        requestMap.set(key, {
-          id: `virtual-teacher-${profile.id}`,
-          userId,
-          instituteId: profile.instituteId,
-          role: "teacher",
-          status: "approved",
-          message: "Appointed by Administrator",
-          createdAt: profile.createdAt,
-          updatedAt: profile.updatedAt,
-          institute: profile.institute,
-        });
-      }
-    });
+    mergeProfiles(studentProfilesById, "student", "Enrolled by Administrator");
+    mergeProfiles(studentProfilesByEmail, "student", "Enrolled by Administrator (Email)");
+    mergeProfiles(teacherProfilesById, "teacher", "Appointed by Administrator");
+    mergeProfiles(teacherProfilesByEmail, "teacher", "Appointed by Administrator (Email)");
 
     // Add owned institutes as "approved" virtual requests with "admin" role
     ownedInstitutes.forEach((inst: any) => {
