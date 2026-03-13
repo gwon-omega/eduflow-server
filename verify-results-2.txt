@@ -1,0 +1,22 @@
+Testing application Prisma client with driver adapter...
+DATABASE_URL starts with: postgresql://postgre
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."users"."id" FROM "public"."users" WHERE 1=1 OFFSET $1) AS "sub"
+prisma:error 
+Invalid `prisma.user.count()` invocation in
+D:\fullstack\proj2\server\scripts\verify-prisma.ts:14:41
+
+  11 try {
+  12   const start = Date.now();
+  13   // Test a basic count query
+ΓåÆ 14   const userCount = await prisma.user.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
+--- Attempting fallback check with raw pg ---
+Γ¥î FAILED: 
+Invalid `prisma.user.count()` invocation in
+D:\fullstack\proj2\server\scripts\verify-prisma.ts:14:41
+
+  11 try {
+  12   const start = Date.now();
+  13   // Test a basic count query
+ΓåÆ 14   const userCount = await prisma.user.count(
+Error opening a TLS connection: self-signed certificate in certificate chain

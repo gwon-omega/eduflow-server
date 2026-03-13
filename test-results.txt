@@ -1,0 +1,8 @@
+[DATABASE_URL (Pooler)] Testing: postgresql://postgres.yszohtdqidnoqckysyff:***@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+[DATABASE_URL (Pooler)] SUCCESS (990ms)
+[DATABASE_URL + sslmode=require] Testing: postgresql://postgres.yszohtdqidnoqckysyff:***@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require
+[DATABASE_URL + sslmode=require] SUCCESS (656ms)
+[DIRECT_URL (Direct)] Testing: postgresql://postgres.yszohtdqidnoqckysyff:***@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
+[DIRECT_URL (Direct)] SUCCESS (473ms)
+[DIRECT_URL + sslmode=require] Testing: postgresql://postgres.yszohtdqidnoqckysyff:***@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require
+[DIRECT_URL + sslmode=require] SUCCESS (480ms)

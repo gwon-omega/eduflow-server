@@ -33,7 +33,7 @@ export class AttendanceRepo extends TenantRepository<Attendance> {
       instituteId: data.instituteId,
       include: {
         course: true,
-      }
+      },
     });
   }
 
@@ -60,6 +60,7 @@ export class AttendanceRepo extends TenantRepository<Attendance> {
       where,
       include: {
         student: { select: { firstName: true, lastName: true } },
+        course: { select: { level: true, name: true } },
       },
       orderBy: { date: "desc" },
     });

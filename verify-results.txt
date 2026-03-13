@@ -1,0 +1,34 @@
+Testing application Prisma client with driver adapter...
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."users"."id" FROM "public"."users" WHERE 1=1 OFFSET $1) AS "sub"
+prisma:error 
+Invalid `prisma.user.count()` invocation in
+D:\fullstack\proj2\server\scripts\verify-prisma.ts:8:41
+
+  5 try {
+  6   const start = Date.now();
+  7   // Test a simple findUnique as mentioned in the user error
+ΓåÆ 8   const userCount = await prisma.user.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
+Γ¥î FAILED: 
+Invalid `prisma.user.count()` invocation in
+D:\fullstack\proj2\server\scripts\verify-prisma.ts:8:41
+
+  5 try {
+  6   const start = Date.now();
+  7   // Test a simple findUnique as mentioned in the user error
+ΓåÆ 8   const userCount = await prisma.user.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
+PrismaClientKnownRequestError: 
+Invalid `prisma.user.count()` invocation in
+D:\fullstack\proj2\server\scripts\verify-prisma.ts:8:41
+
+  5 try {
+  6   const start = Date.now();
+  7   // Test a simple findUnique as mentioned in the user error
+ΓåÆ 8   const userCount = await prisma.user.count(
+Error opening a TLS connection: self-signed certificate in certificate chain
+    at ei.handleRequestError (D:\fullstack\proj2\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (D:\fullstack\proj2\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (D:\fullstack\proj2\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (D:\fullstack\proj2\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async verify (D:\fullstack\proj2\server\scripts\verify-prisma.ts:8:23)

@@ -1,10 +1,21 @@
 import { Router } from "express";
-import { login, logout, googleLogin, register, verifyEmail, resendVerification } from "../controllers";
+import {
+  login,
+  logout,
+  googleLogin,
+  register,
+  verifyEmail,
+  resendVerification,
+} from "../controllers";
 import { getCloudinarySignature } from "../controllers/getCloudinarySignature";
-import { forgotPassword, resetPassword } from "../controllers/forgotPassword.controller";
+import {
+  forgotPassword,
+  resetPassword,
+} from "../controllers/forgotPassword.controller";
 import { getMe } from "../controllers/getMe.controller";
 import { updateProfile } from "../controllers/updateProfile.controller";
 import { updateProfileImage } from "../controllers/updateProfileImage.controller";
+import { changePassword } from "../controllers/changePassword.controller";
 import { authenticate } from "../../../core/middleware/authenticate";
 import { emailResendLimiter } from "../../../core/middleware/rateLimiter";
 
@@ -28,6 +39,9 @@ router.post("/logout", logout);
 router.get("/profile", authenticate, getMe); // Map /profile to getMe for convenience or specialized controller
 router.put("/profile", authenticate, updateProfile);
 router.post("/profile/image", authenticate, updateProfileImage);
+
+// Change password (authenticated)
+router.post("/change-password", authenticate, changePassword);
 
 // Get current user (authenticated)
 router.get("/me", authenticate, getMe);
